@@ -70,7 +70,7 @@ target_include_directories(demo PRIVATE
 
 target_sources(demo PRIVATE
     deps/imgui/backends/imgui_impl_opengl3.cpp
-    deps/imgui/backends/imgui_impl_sdl.cpp)
+    deps/imgui/backends/imgui_impl_sdl2.cpp)
 
 target_include_directories(demo PRIVATE
     deps/imgui/backends)
