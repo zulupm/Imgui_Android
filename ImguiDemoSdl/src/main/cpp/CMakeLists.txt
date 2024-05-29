@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(imgui_demo)
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -27,6 +28,21 @@ add_subdirectory(deps/glm)
 
 # Declare the proper type of target. We'll add sources later.
 if (ANDROID)
+    # Seems like SDL2 is a bit broken - it wants libhidapi.so, but doesn't build it by default.
+    # We'll have to help it out somewhat
+    add_library(hidapi SHARED)
+    target_sources(hidapi PRIVATE
+        deps/SDL/src/hidapi/android/hid.cpp
+    )
+    target_link_libraries(hidapi PRIVATE
+        ${SDL2_LIBRARY} log
+    )
+    target_include_directories(hidapi PRIVATE
+        ${SDL2_INCLUDE_DIR}
+    )
+    # hid.cpp relies on an internal API call, which is really not necessary
+    target_compile_definitions(hidapi PRIVATE
+            Android_JNI_RequestPermission=SDL_AndroidRequestPermission)
     add_library(demo SHARED)
     target_link_options(demo PRIVATE
             -Wl,--no-undefined)
