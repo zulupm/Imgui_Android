@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
-find_package(CURL REQUIRED)
+find_package(CURL)
 
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
@@ -87,6 +87,14 @@ endif()
 
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${CURL_LIBRARIES})
-target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps ${CURL_INCLUDE_DIRS})
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2)
+target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps)
+
+if (CURL_FOUND)
+    target_link_libraries(demo PRIVATE ${CURL_LIBRARIES})
+    target_include_directories(demo PRIVATE ${CURL_INCLUDE_DIRS})
+    target_compile_definitions(demo PRIVATE HAS_CURL=1)
+else()
+    message(WARNING "libcurl not found, Binance price fetching disabled")
+endif()
 

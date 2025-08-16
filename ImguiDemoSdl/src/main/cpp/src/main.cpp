@@ -15,10 +15,14 @@
 
 #include <unistd.h>
 #include <dirent.h>
-#include <curl/curl.h>
-#include <nlohmann/json.hpp>
 #include <vector>
 #include <string>
+#include <algorithm>
+
+#ifdef HAS_CURL
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
+#endif
 
 /* Shader version definition for dear imgui */
 const char* imguiShaderVersions = nullptr;
@@ -103,6 +107,7 @@ static SDL_GLContext createCtx(SDL_Window *w)
     return ctx;
 }
 
+#ifdef HAS_CURL
 static size_t CurlWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     std::string* s = static_cast<std::string*>(userp);
     s->append(static_cast<char*>(contents), size * nmemb);
@@ -133,12 +138,19 @@ static bool FetchPrices(const char* symbol, std::vector<double>& prices) {
     }
     return true;
 }
+#else
+static bool FetchPrices(const char*, std::vector<double>&) {
+    return false;
+}
+#endif
 
 
 int main(int argc, char** argv)
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+#ifdef HAS_CURL
     curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
 
     if (argc < 2)
     {
@@ -264,7 +276,9 @@ int main(int argc, char** argv)
         }
     }
     ImPlot::DestroyContext();
+#ifdef HAS_CURL
     curl_global_cleanup();
+#endif
     SDL_GL_DeleteContext(ctx);
     SDL_Quit();
     return 0;
