@@ -11,7 +11,19 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(SDL2 REQUIRED)
+find_package(SDL2)
+if (NOT SDL2_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        SDL2
+        URL https://github.com/libsdl-org/SDL/releases/download/release-2.28.5/SDL2-2.28.5.tar.gz
+    )
+    FetchContent_MakeAvailable(SDL2)
+    set(SDL2_LIBRARY SDL2::SDL2 SDL2::SDL2main)
+    set(SDL2_INCLUDE_DIR ${SDL2_SOURCE_DIR}/include)
+    set(SDL2_FOUND TRUE)
+endif()
+
 find_package(CURL)
 if (NOT CURL_FOUND)
     include(FetchContent)
