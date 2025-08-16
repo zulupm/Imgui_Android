@@ -34,8 +34,18 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
+      - name: Rename APK with run number and timestamp
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          APK_PATH=$(ls ImguiDemoSdl/build/outputs/apk/debug/*.apk)
+          NEW_NAME="ImguiDemoSdl-${BUILD_NUMBER}-${TIMESTAMP}.apk"
+          mv "$APK_PATH" "ImguiDemoSdl/build/outputs/apk/debug/$NEW_NAME"
+          echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: ImguiDemoSdl/build/outputs/apk/debug/*.apk
+          name: ${{ env.APK_NAME }}
+          path: ImguiDemoSdl/build/outputs/apk/debug/${{ env.APK_NAME }}
+          compression-level: 0
