@@ -8,7 +8,7 @@
 #else
 #include "gl_glcore_3_3.h"
 #endif
-#include "teapot.h"
+#include "implot.h"
 
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
@@ -132,6 +132,7 @@ int main(int argc, char** argv)
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGui_ImplSDL2_InitForOpenGL(window, ctx);
     ImGui_ImplOpenGL3_Init(imguiShaderVersions); // Select proper OpenGL version automagically
 
@@ -147,61 +148,18 @@ int main(int argc, char** argv)
 
     bool show_test_window = true;
     bool show_another_window = false;
+    bool show_implot_demo = true;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
     Log(LOG_INFO) << "Entering main loop";
     {
-
         bool done = false;
-        float teapotRotation = 0;
-        bool rotateSync = false;
-
-        Teapot teapot;
-        teapot.init();
-
-        int deltaX = 0, deltaY = 0;
-        int prevX , prevY;
-        SDL_GetMouseState(&prevX, &prevY);
-
         while (!done) {
             SDL_Event e;
-
-            deltaX = 0;
-            deltaY = 0;
-
-            float deltaZoom = 0.0f;
-
             while (SDL_PollEvent(&e)) {
-                bool handledByImGui = ImGui_ImplSDL2_ProcessEvent(&e);
-                {
-                    switch (e.type) {
-                        case SDL_QUIT:
-                            done = true;
-                            break;
-                        case SDL_MOUSEBUTTONDOWN:
-                            prevX = e.button.x;
-                            prevY = e.button.y;
-                            break;
-                        case SDL_MOUSEMOTION:
-                            if (e.motion.state & SDL_BUTTON_LMASK) {
-                                deltaX += prevX - e.motion.x;
-                                deltaY += prevY - e.motion.y;
-                                prevX = e.motion.x;
-                                prevY = e.motion.y;
-                            }
-                            break;
-                        case SDL_MULTIGESTURE:
-                            if (e.mgesture.numFingers > 1) {
-                                deltaZoom += e.mgesture.dDist * 10.0f;
-                            }
-                            break;
-                        case SDL_MOUSEWHEEL:
-                            deltaZoom += e.wheel.y / 100.0f;
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                ImGui_ImplSDL2_ProcessEvent(&e);
+                if (e.type == SDL_QUIT)
+                    done = true;
             }
             if (io.WantTextInput) {
                 SDL_StartTextInput();
@@ -232,44 +190,28 @@ int main(int argc, char** argv)
                 ImGui::End();
             }
 
-            // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+            // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowDemoWindow()
             if (show_test_window) {
                 ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
                 ImGui::ShowDemoWindow(&show_test_window);
             }
 
-            // 4. Show some controls for the teapot
-            {
-                ImGui::Begin("Teapot controls");
-                ImGui::SliderFloat("Teapot rotation", &teapotRotation, 0, 2 * M_PI);
-                ImGui::Checkbox("Rotate synchronously", &rotateSync);
-                ImGui::Text("Zoom value: %f", teapot.zoomValue());
-                ImGui::End();
+            // 4. Show the ImPlot demo window
+            if (show_implot_demo) {
+                ImPlot::ShowDemoWindow(&show_implot_demo);
             }
-
 
             // Rendering
             glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.y);
             glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            teapot.rotateTo(teapotRotation);
-            if (rotateSync)
-                teapot.rotateCameraTo(teapotRotation);
-
-            if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
-            {
-                if (std::abs(deltaZoom) > 0.001f)
-                    teapot.zoomBy(deltaZoom);
-                if ((deltaX != 0) || (deltaY != 0))
-                    teapot.rotateCameraBy(deltaX * 0.005f, deltaY * 0.005f);
-            }
-            teapot.draw();
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window);
         }
     }
+    ImPlot::DestroyContext();
     SDL_GL_DeleteContext(ctx);
     SDL_Quit();
     return 0;

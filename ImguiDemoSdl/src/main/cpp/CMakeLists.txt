@@ -13,18 +13,10 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
 
-# This is an adaptation of the ImGui demo, with some geometry (a teapot)
-# rendered in order to check the ImGui implementation. Teapot is taken
-# from Google NDK samples.
+# This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
 set(IMGUI_PATH deps/imgui)
 set(IMGUI_IMPL_PATH src/imgui_impl)
-
-# Since we're drawing something that's not just a triangle, we're gonna
-# want a library that deals with vectors and matrices. glm is the obvious
-# choice.
-
-add_subdirectory(deps/glm)
 
 # Declare the proper type of target. We'll add sources later.
 if (ANDROID)
@@ -84,7 +76,9 @@ endif()
 
 target_sources(demo PRIVATE
         src/main.cpp
-        src/teapot.cpp)
+        deps/implot/implot.cpp
+        deps/implot/implot_items.cpp
+        deps/implot/implot_demo.cpp)
 
 if (NOT ANDROID)
     target_sources(demo PRIVATE
@@ -96,5 +90,5 @@ endif()
 
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} glm GLESv2)
-target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR})
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2)
+target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot)

@@ -4,18 +4,13 @@ A demo of dear imgui running on Android
 
 ## What?
 
-This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. In order to check my implementation,
-I've decided to render a teapot from [WebGL repository](https://github.com/KhronosGroup/WebGL) (the 
-[shiny teapot demo](https://github.com/KhronosGroup/WebGL/tree/master/sdk/demos/google/shiny-teapot) by Google). Since ImGui
-windows and the teapot itself are rendered properly, I assume my ES2 code is correct (since rendering a teapot perturbs GL state
-that ImGui implementations might depend on).
+This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. It now showcases [ImPlot](https://github.com/epezent/implot) by displaying its demo window.
 
 As an added bonus, you can compile and run this demo on a desktop! (Tested only on Linux so far)
 
 ## How?
 
-This demo, apart from dear imgui, uses [SDL2](http://libsdl.org/), [glm](https://glm.g-truc.net/0.9.8/index.html), and
-[stb_image](https://github.com/nothings/stb). It includes SDL and glm as submodules. You don't need SDL2 sources if you're
+This demo, apart from dear imgui, uses [SDL2](http://libsdl.org/), [stb_image](https://github.com/nothings/stb), and [ImPlot](https://github.com/epezent/implot). It includes SDL as a submodule. You don't need SDL2 sources if you're
 building on a desktop, though, but you'll need SDL2 installed.
 
 I ran into some issues while working on this demo. First, Android's virtual keyboard sends events in a weird way, making
@@ -87,14 +82,4 @@ C++/OpenGL code that will use the same set of build files on Android and desktop
 
 Since this is more of a proof-of-concept (well, maybe several concepts), there are a lot of things that are worth doing:
 
- - Rendering an environment-mapped teapot without any "environment" (skybox) seems odd. Adding it shouldn't be too difficult.
- 
- - There are lots of parameters you'd probably want to monitor and/or control, but right now I'm only displaying a zoom value
-   and teapot rotation. Changing shader parameters on the fly seems like just the right thing to do with ImGui.
- 
- - Speaking of zoom, controls are very wrong. Seems like using a virtual "trackball" is the way to go to rotate camera
-   in 3D space.
-   
- - Since this is a working implementation of ImGui for OpenGL ES2, and a working project with SDL2, you can try adding your
-   own game/app here and have a nice overlay!
-
+ - Since this is a working implementation of ImGui and ImPlot for OpenGL ES2, and a working project with SDL2, you can try adding your own game/app here and have a nice overlay!
