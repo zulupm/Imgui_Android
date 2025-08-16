@@ -1,8 +1,16 @@
 package me.sfalexrog.imguidemo;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
+import me.sfalexrog.imguidemo.BuildConfig;
 
 import org.libsdl.app.SDLActivity;
 
@@ -71,6 +79,21 @@ public class DemoActivity extends SDLActivity {
                 Log.e(TAG, "Could not open " + assetName + " from assets, that should not happen", e);
             }
         }
-
+        TextView buildView = new TextView(this);
+        String buildText;
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            buildText = pInfo.versionName + " (" + pInfo.versionCode + ")\nBuild " + BuildConfig.BUILD_NUMBER;
+        } catch (PackageManager.NameNotFoundException e) {
+            buildText = "Build " + BuildConfig.BUILD_NUMBER;
+        }
+        buildView.setText(buildText);
+        buildView.setTextColor(Color.WHITE);
+        buildView.setBackgroundColor(0x66000000);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.END);
+        addContentView(buildView, params);
     }
 }

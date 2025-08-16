@@ -2,6 +2,8 @@
 A demo of dear imgui running on Android
 ![screenshot](https://raw.githubusercontent.com/sfalexrog/Imgui_Android/master/screenshot/screenshot.png)
 
+The running build number is displayed in the corner for quick version identification, and it updates with every build.
+
 ## What?
 
 This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. It now showcases [ImPlot](https://github.com/epezent/implot) by streaming Bitcoin and Ethereum prices from the [Binance WebSocket API](https://binance.com/en/binance-api) and plotting them in real time.
