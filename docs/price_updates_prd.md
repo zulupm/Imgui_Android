@@ -22,6 +22,10 @@ The demo currently skips cryptocurrency price fetching when libcurl is missing a
 4. **Fallback Behaviour**
    - If WebSocket connection fails, retry periodically and optionally fall back to REST polling.
 
+5. **Environment Parity**
+   - Provide a script that synchronizes git submodules and logs system details so CI and local builds use the same dependencies.
+   - CI should commit `ci/last_ci_error.log` when builds fail for easier debugging.
+
 ## Non-Goals
 - Supporting exchanges other than Binance.
 - Historical data storage beyond the session.
