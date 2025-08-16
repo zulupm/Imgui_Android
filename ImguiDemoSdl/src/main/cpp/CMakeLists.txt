@@ -13,6 +13,17 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
 find_package(CURL)
+if (NOT CURL_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        libcurl
+        URL https://curl.se/download/curl-8.4.0.tar.gz
+    )
+    FetchContent_MakeAvailable(libcurl)
+    set(CURL_LIBRARIES libcurl)
+    set(CURL_INCLUDE_DIRS ${libcurl_SOURCE_DIR}/include)
+    set(CURL_FOUND TRUE)
+endif()
 
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
