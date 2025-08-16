@@ -35,16 +35,25 @@ jobs:
 
       - name: Build release APK
         run: ./gradlew assembleRelease
+      - name: Rename APK with run number and timestamp
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          APK_PATH=$(ls ImguiDemoSdl/build/outputs/apk/release/*.apk)
+          NEW_NAME="ImguiDemoSdl-${BUILD_NUMBER}-${TIMESTAMP}.apk"
+          mv "$APK_PATH" "ImguiDemoSdl/build/outputs/apk/release/$NEW_NAME"
+          echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
-          path: ImguiDemoSdl/build/outputs/apk/release/*.apk
+          name: ${{ env.APK_NAME }}
+          path: ImguiDemoSdl/build/outputs/apk/release/${{ env.APK_NAME }}
+          compression-level: 0
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: ImguiDemoSdl/build/outputs/apk/release/*.apk
+          files: ImguiDemoSdl/build/outputs/apk/release/${{ env.APK_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
