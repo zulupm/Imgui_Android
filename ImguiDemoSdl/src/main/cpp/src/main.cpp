@@ -18,11 +18,10 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-
-#ifdef HAS_CURL
-#include <curl/curl.h>
+#include "easywsclient.hpp"
 #include <nlohmann/json.hpp>
-#endif
+
+using easywsclient::WebSocket;
 
 /* Shader version definition for dear imgui */
 const char* imguiShaderVersions = nullptr;
@@ -107,51 +106,11 @@ static SDL_GLContext createCtx(SDL_Window *w)
     return ctx;
 }
 
-#ifdef HAS_CURL
-static size_t CurlWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-    std::string* s = static_cast<std::string*>(userp);
-    s->append(static_cast<char*>(contents), size * nmemb);
-    return size * nmemb;
-}
-
-static bool FetchPrices(const char* symbol, std::vector<double>& prices) {
-    CURL* curl = curl_easy_init();
-    if (!curl) return false;
-
-    std::string response;
-    std::string url = std::string("https://api.binance.com/api/v3/klines?symbol=") + symbol + "&interval=1h&limit=100";
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    CURLcode res = curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    if (res != CURLE_OK) return false;
-
-    try {
-        auto data = nlohmann::json::parse(response);
-        for (const auto& candle : data) {
-            double price = std::stod(candle[4].get<std::string>());
-            prices.push_back(price);
-        }
-    } catch (...) {
-        return false;
-    }
-    return true;
-}
-#else
-static bool FetchPrices(const char*, std::vector<double>&) {
-    return false;
-}
-#endif
 
 
 int main(int argc, char** argv)
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
-#ifdef HAS_CURL
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-#endif
-
     if (argc < 2)
     {
         Log(LOG_FATAL) << "Not enough arguments! Usage: " << argv[0] << " path_to_data_dir";
@@ -198,15 +157,11 @@ int main(int argc, char** argv)
     bool show_another_window = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
-    std::vector<double> btc_prices;
-    std::vector<double> eth_prices;
-    FetchPrices("BTCUSDT", btc_prices);
-    FetchPrices("ETHUSDT", eth_prices);
-    size_t sample_count = std::min(btc_prices.size(), eth_prices.size());
-    btc_prices.resize(sample_count);
-    eth_prices.resize(sample_count);
-    std::vector<double> sample_x(sample_count);
-    for (size_t i = 0; i < sample_count; ++i) sample_x[i] = static_cast<double>(i);
+    std::vector<double> btc_x, btc_prices;
+    std::vector<double> eth_x, eth_prices;
+    WebSocket::pointer ws_btc = WebSocket::from_url("wss://stream.binance.com:9443/ws/btcusdt@trade");
+    WebSocket::pointer ws_eth = WebSocket::from_url("wss://stream.binance.com:9443/ws/ethusdt@trade");
+    const size_t max_points = 1000;
 
     Log(LOG_INFO) << "Entering main loop";
     {
@@ -222,6 +177,36 @@ int main(int argc, char** argv)
                 SDL_StartTextInput();
             } else {
                 SDL_StopTextInput();
+            }
+            if (ws_btc) {
+                ws_btc->poll();
+                ws_btc->dispatch([&btc_prices, &btc_x, max_points](const std::string& msg){
+                    try {
+                        auto j = nlohmann::json::parse(msg);
+                        double price = std::stod(j["p"].get<std::string>());
+                        btc_prices.push_back(price);
+                        btc_x.push_back(static_cast<double>(btc_x.size()));
+                        if (btc_prices.size() > max_points) {
+                            btc_prices.erase(btc_prices.begin());
+                            btc_x.erase(btc_x.begin());
+                        }
+                    } catch (...) {}
+                });
+            }
+            if (ws_eth) {
+                ws_eth->poll();
+                ws_eth->dispatch([&eth_prices, &eth_x, max_points](const std::string& msg){
+                    try {
+                        auto j = nlohmann::json::parse(msg);
+                        double price = std::stod(j["p"].get<std::string>());
+                        eth_prices.push_back(price);
+                        eth_x.push_back(static_cast<double>(eth_x.size()));
+                        if (eth_prices.size() > max_points) {
+                            eth_prices.erase(eth_prices.begin());
+                            eth_x.erase(eth_x.begin());
+                        }
+                    } catch (...) {}
+                });
             }
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame();
@@ -256,10 +241,10 @@ int main(int argc, char** argv)
             // 4. Show crypto price plots
             if (ImGui::Begin("Crypto Prices")) {
                 if (ImPlot::BeginPlot("BTC/ETH")) {
-                    if (sample_count > 0) {
-                        ImPlot::PlotLine("BTC", sample_x.data(), btc_prices.data(), (int)sample_count);
-                        ImPlot::PlotLine("ETH", sample_x.data(), eth_prices.data(), (int)sample_count);
-                    }
+                    if (!btc_prices.empty())
+                        ImPlot::PlotLine("BTC", btc_x.data(), btc_prices.data(), (int)btc_prices.size());
+                    if (!eth_prices.empty())
+                        ImPlot::PlotLine("ETH", eth_x.data(), eth_prices.data(), (int)eth_prices.size());
                     ImPlot::EndPlot();
                 }
             }
@@ -275,10 +260,9 @@ int main(int argc, char** argv)
             SDL_GL_SwapWindow(window);
         }
     }
+    if (ws_btc) ws_btc->close();
+    if (ws_eth) ws_eth->close();
     ImPlot::DestroyContext();
-#ifdef HAS_CURL
-    curl_global_cleanup();
-#endif
     SDL_GL_DeleteContext(ctx);
     SDL_Quit();
     return 0;
