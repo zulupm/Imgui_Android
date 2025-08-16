@@ -106,51 +106,55 @@ static SDL_GLContext createCtx(SDL_Window *w)
     return ctx;
 }
 
-static void ApplyMaterialStyle() {
+static void ApplyIOSStyle() {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
-    const ImVec4 accent(0.0f, 0.78f, 0.55f, 1.0f);
-    const ImVec4 bg(0.07f, 0.07f, 0.07f, 1.0f);
-    const ImVec4 surface(0.16f, 0.16f, 0.16f, 1.0f);
+    const ImVec4 accent(0.0f, 0.48f, 1.0f, 1.0f); // iOS blue
+    const ImVec4 bg(0.97f, 0.97f, 0.97f, 1.0f);
+    const ImVec4 surface(1.0f, 1.0f, 1.0f, 1.0f);
 
-    colors[ImGuiCol_Text]               = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    colors[ImGuiCol_Text]               = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     colors[ImGuiCol_WindowBg]           = bg;
     colors[ImGuiCol_ChildBg]            = bg;
     colors[ImGuiCol_PopupBg]            = surface;
-    colors[ImGuiCol_Border]             = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+    colors[ImGuiCol_Border]             = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
     colors[ImGuiCol_FrameBg]            = surface;
-    colors[ImGuiCol_FrameBgHovered]     = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
-    colors[ImGuiCol_FrameBgActive]      = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
+    colors[ImGuiCol_FrameBgHovered]     = ImVec4(0.9f, 0.9f, 0.9f, 1.0f);
+    colors[ImGuiCol_FrameBgActive]      = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
     colors[ImGuiCol_TitleBg]            = bg;
     colors[ImGuiCol_TitleBgActive]      = surface;
     colors[ImGuiCol_TitleBgCollapsed]   = bg;
     colors[ImGuiCol_CheckMark]          = accent;
     colors[ImGuiCol_SliderGrab]         = accent;
-    colors[ImGuiCol_SliderGrabActive]   = ImVec4(0.0f, 0.85f, 0.60f, 1.0f);
+    colors[ImGuiCol_SliderGrabActive]   = ImVec4(0.0f, 0.6f, 1.0f, 1.0f);
     colors[ImGuiCol_Button]             = surface;
-    colors[ImGuiCol_ButtonHovered]      = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
-    colors[ImGuiCol_ButtonActive]       = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
+    colors[ImGuiCol_ButtonHovered]      = ImVec4(0.9f, 0.9f, 0.9f, 1.0f);
+    colors[ImGuiCol_ButtonActive]       = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
     colors[ImGuiCol_Header]             = surface;
-    colors[ImGuiCol_HeaderHovered]      = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
-    colors[ImGuiCol_HeaderActive]       = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
+    colors[ImGuiCol_HeaderHovered]      = ImVec4(0.9f, 0.9f, 0.9f, 1.0f);
+    colors[ImGuiCol_HeaderActive]       = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
     colors[ImGuiCol_Tab]                = surface;
-    colors[ImGuiCol_TabHovered]         = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
-    colors[ImGuiCol_TabActive]          = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
+    colors[ImGuiCol_TabHovered]         = colors[ImGuiCol_ButtonHovered];
+    colors[ImGuiCol_TabActive]          = colors[ImGuiCol_ButtonActive];
     colors[ImGuiCol_TabUnfocused]       = surface;
-    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
-    colors[ImGuiCol_Separator]          = ImVec4(0.28f, 0.28f, 0.28f, 1.0f);
+    colors[ImGuiCol_TabUnfocusedActive] = colors[ImGuiCol_TabActive];
+    colors[ImGuiCol_Separator]          = ImVec4(0.86f, 0.86f, 0.86f, 1.0f);
     colors[ImGuiCol_ResizeGrip]         = surface;
-    colors[ImGuiCol_ResizeGripHovered]  = ImVec4(0.26f, 0.26f, 0.26f, 1.0f);
-    colors[ImGuiCol_ResizeGripActive]   = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
+    colors[ImGuiCol_ResizeGripHovered]  = colors[ImGuiCol_ButtonHovered];
+    colors[ImGuiCol_ResizeGripActive]   = colors[ImGuiCol_ButtonActive];
     colors[ImGuiCol_ScrollbarBg]        = surface;
-    colors[ImGuiCol_ScrollbarGrab]      = ImVec4(0.33f, 0.33f, 0.33f, 1.0f);
-    colors[ImGuiCol_ScrollbarGrabHovered]= ImVec4(0.37f, 0.37f, 0.37f, 1.0f);
-    colors[ImGuiCol_ScrollbarGrabActive]= ImVec4(0.41f, 0.41f, 0.41f, 1.0f);
+    colors[ImGuiCol_ScrollbarGrab]      = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+    colors[ImGuiCol_ScrollbarGrabHovered]= ImVec4(0.7f, 0.7f, 0.7f, 1.0f);
+    colors[ImGuiCol_ScrollbarGrabActive]= ImVec4(0.6f, 0.6f, 0.6f, 1.0f);
 
-    style.WindowRounding = 6.0f;
-    style.FrameRounding = 6.0f;
-    style.GrabRounding = 6.0f;
-    style.ScrollbarRounding = 6.0f;
+    style.WindowRounding = 8.0f;
+    style.FrameRounding = 8.0f;
+    style.GrabRounding = 8.0f;
+    style.ScrollbarRounding = 8.0f;
+    style.FramePadding = ImVec2(12.0f, 8.0f);
+    style.ItemSpacing = ImVec2(10.0f, 10.0f);
+    style.TouchExtraPadding = ImVec2(4.0f, 4.0f);
+    style.ScrollbarSize = 20.0f;
 
     ImPlotStyle& plotStyle = ImPlot::GetStyle();
     plotStyle.Colors[ImPlotCol_Line]          = accent;
@@ -159,18 +163,18 @@ static void ApplyMaterialStyle() {
     plotStyle.Colors[ImPlotCol_MarkerFill]    = accent;
     plotStyle.Colors[ImPlotCol_FrameBg]       = surface;
     plotStyle.Colors[ImPlotCol_PlotBg]        = bg;
-    plotStyle.Colors[ImPlotCol_PlotBorder]    = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+    plotStyle.Colors[ImPlotCol_PlotBorder]    = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
     plotStyle.Colors[ImPlotCol_LegendBg]      = surface;
     plotStyle.Colors[ImPlotCol_LegendBorder]  = plotStyle.Colors[ImPlotCol_PlotBorder];
-    plotStyle.Colors[ImPlotCol_LegendText]    = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    plotStyle.Colors[ImPlotCol_TitleText]     = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    plotStyle.Colors[ImPlotCol_AxisText]      = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    plotStyle.Colors[ImPlotCol_AxisGrid]      = ImVec4(0.28f, 0.28f, 0.28f, 1.0f);
-    plotStyle.Colors[ImPlotCol_AxisTick]      = ImVec4(0.28f, 0.28f, 0.28f, 1.0f);
+    plotStyle.Colors[ImPlotCol_LegendText]    = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    plotStyle.Colors[ImPlotCol_TitleText]     = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    plotStyle.Colors[ImPlotCol_AxisText]      = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    plotStyle.Colors[ImPlotCol_AxisGrid]      = ImVec4(0.86f, 0.86f, 0.86f, 1.0f);
+    plotStyle.Colors[ImPlotCol_AxisTick]      = ImVec4(0.86f, 0.86f, 0.86f, 1.0f);
     plotStyle.Colors[ImPlotCol_AxisBgHovered] = colors[ImGuiCol_ButtonHovered];
     plotStyle.Colors[ImPlotCol_AxisBgActive]  = colors[ImGuiCol_ButtonActive];
     plotStyle.Colors[ImPlotCol_Selection]     = ImVec4(accent.x, accent.y, accent.z, 0.25f);
-    plotStyle.Colors[ImPlotCol_Crosshairs]    = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
+    plotStyle.Colors[ImPlotCol_Crosshairs]    = ImVec4(0.0f, 0.0f, 0.0f, 0.5f);
 }
 
 int main(int argc, char** argv)
@@ -208,8 +212,8 @@ int main(int argc, char** argv)
     ImGui_ImplSDL2_InitForOpenGL(window, ctx);
     ImGui_ImplOpenGL3_Init(imguiShaderVersions); // Select proper OpenGL version automagically
 
-    ImGui::StyleColorsDark();
-    ApplyMaterialStyle();
+    ImGui::StyleColorsLight();
+    ApplyIOSStyle();
 
     // Load Fonts
     // (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -221,7 +225,7 @@ int main(int argc, char** argv)
 
     bool show_test_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.07f, 0.07f, 0.07f, 1.0f);
+    ImVec4 clear_color = ImVec4(0.97f, 0.97f, 0.97f, 1.0f);
 
     std::vector<double> btc_x, btc_prices;
     std::vector<double> eth_x, eth_prices;

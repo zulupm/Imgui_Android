@@ -1,7 +1,7 @@
 # Imgui_Android
 A demo of dear imgui running on Android.
 
-The demo now uses a Material-inspired dark theme so the interface feels at home on modern Android.
+The demo now uses an iOS-inspired light theme with touch-friendly spacing for a modern mobile feel.
 ![screenshot](https://raw.githubusercontent.com/sfalexrog/Imgui_Android/master/screenshot/screenshot.png)
 
 The running build number is displayed in the corner for quick version identification.
