@@ -160,7 +160,15 @@ int main(int argc, char** argv)
     std::vector<double> btc_x, btc_prices;
     std::vector<double> eth_x, eth_prices;
     WebSocket::pointer ws_btc = WebSocket::from_url("wss://stream.binance.com:9443/ws/btcusdt@trade");
+    if (ws_btc)
+        Log(LOG_INFO) << "Connected to BTC stream";
+    else
+        Log(LOG_ERROR) << "BTC websocket connection failed";
     WebSocket::pointer ws_eth = WebSocket::from_url("wss://stream.binance.com:9443/ws/ethusdt@trade");
+    if (ws_eth)
+        Log(LOG_INFO) << "Connected to ETH stream";
+    else
+        Log(LOG_ERROR) << "ETH websocket connection failed";
     const size_t max_points = 1000;
 
     Log(LOG_INFO) << "Entering main loop";
@@ -182,6 +190,7 @@ int main(int argc, char** argv)
                 ws_btc->poll();
                 ws_btc->dispatch([&btc_prices, &btc_x, max_points](const std::string& msg){
                     try {
+                        Log(LOG_DEBUG) << "BTC: " << msg;
                         auto j = nlohmann::json::parse(msg);
                         double price = std::stod(j["p"].get<std::string>());
                         btc_prices.push_back(price);
@@ -190,13 +199,16 @@ int main(int argc, char** argv)
                             btc_prices.erase(btc_prices.begin());
                             btc_x.erase(btc_x.begin());
                         }
-                    } catch (...) {}
+                    } catch (const std::exception &e) {
+                        Log(LOG_ERROR) << "BTC parse error: " << e.what();
+                    }
                 });
             }
             if (ws_eth) {
                 ws_eth->poll();
                 ws_eth->dispatch([&eth_prices, &eth_x, max_points](const std::string& msg){
                     try {
+                        Log(LOG_DEBUG) << "ETH: " << msg;
                         auto j = nlohmann::json::parse(msg);
                         double price = std::stod(j["p"].get<std::string>());
                         eth_prices.push_back(price);
@@ -205,7 +217,9 @@ int main(int argc, char** argv)
                             eth_prices.erase(eth_prices.begin());
                             eth_x.erase(eth_x.begin());
                         }
-                    } catch (...) {}
+                    } catch (const std::exception &e) {
+                        Log(LOG_ERROR) << "ETH parse error: " << e.what();
+                    }
                 });
             }
             ImGui_ImplOpenGL3_NewFrame();
@@ -249,6 +263,13 @@ int main(int argc, char** argv)
                 }
             }
             ImGui::End();
+
+            if (ImGui::Begin("Log")) {
+                for (const auto &line : _Logger::history()) {
+                    ImGui::TextUnformatted(line.c_str());
+                }
+                ImGui::End();
+            }
 
             // Rendering
             glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.y);

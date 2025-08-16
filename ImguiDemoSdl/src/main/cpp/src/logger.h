@@ -12,6 +12,7 @@
 #include <iostream>
 #endif
 #include <sstream>
+#include <deque>
 
 namespace _Logger {
     enum Severity {
@@ -21,6 +22,12 @@ namespace _Logger {
         LOG_ERROR,
         LOG_FATAL
     };
+
+    inline std::deque<std::string>& history()
+    {
+        static std::deque<std::string> logHistory;
+        return logHistory;
+    }
 
     class Logger {
     private:
@@ -94,6 +101,10 @@ namespace _Logger {
 #else
             getStream(severity) << sevStr() << logbuf.str() << std::endl;
 #endif
+            auto &h = history();
+            h.emplace_back(sevStr() + logbuf.str());
+            if (h.size() > 200)
+                h.pop_front();
         }
         std::stringstream& log()
         {
