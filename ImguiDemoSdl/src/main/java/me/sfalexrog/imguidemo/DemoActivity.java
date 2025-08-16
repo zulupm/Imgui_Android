@@ -1,5 +1,7 @@
 package me.sfalexrog.imguidemo;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -76,7 +78,13 @@ public class DemoActivity extends SDLActivity {
             }
         }
         TextView buildView = new TextView(this);
-        String buildText = BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")";
+        String buildText;
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            buildText = pInfo.versionName + " (" + pInfo.versionCode + ")";
+        } catch (PackageManager.NameNotFoundException e) {
+            buildText = "Unknown";
+        }
         buildView.setText(buildText);
         buildView.setTextColor(Color.WHITE);
         buildView.setBackgroundColor(0x66000000);
