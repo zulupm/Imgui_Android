@@ -8,6 +8,8 @@ The running build number is displayed in the corner for quick version identifica
 
 This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. It now showcases [ImPlot](https://github.com/epezent/implot) by streaming Bitcoin and Ethereum prices from the [Binance WebSocket API](https://binance.com/en/binance-api) and plotting them in real time. A built-in log window reports runtime errors, connection traces, and incoming API messages.
 
+The demo requests Internet permission so it can reach the public WebSocket endpoints for live price data.
+
 As an added bonus, you can compile and run this demo on a desktop! (Tested only on Linux so far)
 
 ## How?
