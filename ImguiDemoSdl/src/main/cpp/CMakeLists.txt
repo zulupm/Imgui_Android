@@ -87,7 +87,10 @@ endif()
 
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ssl crypto)
+find_library(SSL_LIB ssl)
+find_library(CRYPTO_LIB crypto)
+
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${SSL_LIB} ${CRYPTO_LIB})
 target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient)
 
 
