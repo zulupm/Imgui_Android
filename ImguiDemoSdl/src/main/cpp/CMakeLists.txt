@@ -90,7 +90,14 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 find_library(SSL_LIB ssl)
 find_library(CRYPTO_LIB crypto)
 
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${SSL_LIB} ${CRYPTO_LIB})
+set(OPTIONAL_SSL_LIBS)
+if (SSL_LIB AND CRYPTO_LIB)
+    list(APPEND OPTIONAL_SSL_LIBS ${SSL_LIB} ${CRYPTO_LIB})
+else()
+    message(WARNING "SSL libraries not found; secure WebSocket connections disabled")
+endif()
+
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${OPTIONAL_SSL_LIBS})
 target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient)
 
 
