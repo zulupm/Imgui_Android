@@ -4,13 +4,13 @@ A demo of dear imgui running on Android
 
 ## What?
 
-This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. It now showcases [ImPlot](https://github.com/epezent/implot) by displaying its demo window.
+This is a port of [dear imgui](https://github.com/ocornut/imgui) SDL2 example to Android. It now showcases [ImPlot](https://github.com/epezent/implot) by fetching Bitcoin and Ethereum prices from the [Binance API](https://binance.com/en/binance-api) and plotting them.
 
 As an added bonus, you can compile and run this demo on a desktop! (Tested only on Linux so far)
 
 ## How?
 
-This demo, apart from dear imgui, uses [SDL2](http://libsdl.org/), [stb_image](https://github.com/nothings/stb), and [ImPlot](https://github.com/epezent/implot). It includes SDL as a submodule. You don't need SDL2 sources if you're
+This demo, apart from dear imgui, uses [SDL2](http://libsdl.org/), [stb_image](https://github.com/nothings/stb), [ImPlot](https://github.com/epezent/implot), and [libcurl](https://curl.se/libcurl/) to retrieve cryptocurrency data from Binance. It includes SDL as a submodule. You don't need SDL2 sources if you're
 building on a desktop, though, but you'll need SDL2 installed.
 
 I ran into some issues while working on this demo. First, Android's virtual keyboard sends events in a weird way, making

@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
+find_package(CURL REQUIRED)
 
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
@@ -46,7 +47,6 @@ else()
     add_executable(demo)
 endif()
 
-
 # Use GLES2/GLES3 implementations for Android, GL3 for everything else
 # We'll get ImGui implementations straight from ImGui distribution
 
@@ -73,12 +73,10 @@ else()
     target_compile_definitions(demo PRIVATE "GL_PROFILE_GL3")
 endif()
 
-
 target_sources(demo PRIVATE
         src/main.cpp
         deps/implot/implot.cpp
-        deps/implot/implot_items.cpp
-        deps/implot/implot_demo.cpp)
+        deps/implot/implot_items.cpp)
 
 if (NOT ANDROID)
     target_sources(demo PRIVATE
@@ -87,8 +85,8 @@ if (NOT ANDROID)
             src/glload)
 endif()
 
-
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2)
-target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot)
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${CURL_LIBRARIES})
+target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps ${CURL_INCLUDE_DIRS})
+
