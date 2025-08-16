@@ -34,8 +34,12 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Publish debug APK
+        uses: softprops/action-gh-release@v1
         with:
-          name: debug-apk
-          path: ImguiDemoSdl/build/outputs/apk/debug/*.apk
+          tag_name: debug-${{ github.sha }}
+          name: "Debug build ${{ github.sha }}"
+          prerelease: true
+          files: ImguiDemoSdl/build/outputs/apk/debug/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
