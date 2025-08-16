@@ -8,13 +8,21 @@
 #else
 #include "gl_glcore_3_3.h"
 #endif
-#include "teapot.h"
+#include "implot.h"
 
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 
 #include <unistd.h>
 #include <dirent.h>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+#ifdef HAS_CURL
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
+#endif
 
 /* Shader version definition for dear imgui */
 const char* imguiShaderVersions = nullptr;
@@ -99,10 +107,50 @@ static SDL_GLContext createCtx(SDL_Window *w)
     return ctx;
 }
 
+#ifdef HAS_CURL
+static size_t CurlWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    std::string* s = static_cast<std::string*>(userp);
+    s->append(static_cast<char*>(contents), size * nmemb);
+    return size * nmemb;
+}
+
+static bool FetchPrices(const char* symbol, std::vector<double>& prices) {
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+
+    std::string response;
+    std::string url = std::string("https://api.binance.com/api/v3/klines?symbol=") + symbol + "&interval=1h&limit=100";
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) return false;
+
+    try {
+        auto data = nlohmann::json::parse(response);
+        for (const auto& candle : data) {
+            double price = std::stod(candle[4].get<std::string>());
+            prices.push_back(price);
+        }
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+#else
+static bool FetchPrices(const char*, std::vector<double>&) {
+    return false;
+}
+#endif
+
 
 int main(int argc, char** argv)
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+#ifdef HAS_CURL
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
 
     if (argc < 2)
     {
@@ -132,6 +180,7 @@ int main(int argc, char** argv)
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGui_ImplSDL2_InitForOpenGL(window, ctx);
     ImGui_ImplOpenGL3_Init(imguiShaderVersions); // Select proper OpenGL version automagically
 
@@ -149,59 +198,25 @@ int main(int argc, char** argv)
     bool show_another_window = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
+    std::vector<double> btc_prices;
+    std::vector<double> eth_prices;
+    FetchPrices("BTCUSDT", btc_prices);
+    FetchPrices("ETHUSDT", eth_prices);
+    size_t sample_count = std::min(btc_prices.size(), eth_prices.size());
+    btc_prices.resize(sample_count);
+    eth_prices.resize(sample_count);
+    std::vector<double> sample_x(sample_count);
+    for (size_t i = 0; i < sample_count; ++i) sample_x[i] = static_cast<double>(i);
+
     Log(LOG_INFO) << "Entering main loop";
     {
-
         bool done = false;
-        float teapotRotation = 0;
-        bool rotateSync = false;
-
-        Teapot teapot;
-        teapot.init();
-
-        int deltaX = 0, deltaY = 0;
-        int prevX , prevY;
-        SDL_GetMouseState(&prevX, &prevY);
-
         while (!done) {
             SDL_Event e;
-
-            deltaX = 0;
-            deltaY = 0;
-
-            float deltaZoom = 0.0f;
-
             while (SDL_PollEvent(&e)) {
-                bool handledByImGui = ImGui_ImplSDL2_ProcessEvent(&e);
-                {
-                    switch (e.type) {
-                        case SDL_QUIT:
-                            done = true;
-                            break;
-                        case SDL_MOUSEBUTTONDOWN:
-                            prevX = e.button.x;
-                            prevY = e.button.y;
-                            break;
-                        case SDL_MOUSEMOTION:
-                            if (e.motion.state & SDL_BUTTON_LMASK) {
-                                deltaX += prevX - e.motion.x;
-                                deltaY += prevY - e.motion.y;
-                                prevX = e.motion.x;
-                                prevY = e.motion.y;
-                            }
-                            break;
-                        case SDL_MULTIGESTURE:
-                            if (e.mgesture.numFingers > 1) {
-                                deltaZoom += e.mgesture.dDist * 10.0f;
-                            }
-                            break;
-                        case SDL_MOUSEWHEEL:
-                            deltaZoom += e.wheel.y / 100.0f;
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                ImGui_ImplSDL2_ProcessEvent(&e);
+                if (e.type == SDL_QUIT)
+                    done = true;
             }
             if (io.WantTextInput) {
                 SDL_StartTextInput();
@@ -232,44 +247,38 @@ int main(int argc, char** argv)
                 ImGui::End();
             }
 
-            // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
+            // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowDemoWindow()
             if (show_test_window) {
                 ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
                 ImGui::ShowDemoWindow(&show_test_window);
             }
 
-            // 4. Show some controls for the teapot
-            {
-                ImGui::Begin("Teapot controls");
-                ImGui::SliderFloat("Teapot rotation", &teapotRotation, 0, 2 * M_PI);
-                ImGui::Checkbox("Rotate synchronously", &rotateSync);
-                ImGui::Text("Zoom value: %f", teapot.zoomValue());
-                ImGui::End();
+            // 4. Show crypto price plots
+            if (ImGui::Begin("Crypto Prices")) {
+                if (ImPlot::BeginPlot("BTC/ETH")) {
+                    if (sample_count > 0) {
+                        ImPlot::PlotLine("BTC", sample_x.data(), btc_prices.data(), (int)sample_count);
+                        ImPlot::PlotLine("ETH", sample_x.data(), eth_prices.data(), (int)sample_count);
+                    }
+                    ImPlot::EndPlot();
+                }
             }
-
+            ImGui::End();
 
             // Rendering
             glViewport(0, 0, (int) ImGui::GetIO().DisplaySize.x, (int) ImGui::GetIO().DisplaySize.y);
             glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            teapot.rotateTo(teapotRotation);
-            if (rotateSync)
-                teapot.rotateCameraTo(teapotRotation);
-
-            if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
-            {
-                if (std::abs(deltaZoom) > 0.001f)
-                    teapot.zoomBy(deltaZoom);
-                if ((deltaX != 0) || (deltaY != 0))
-                    teapot.rotateCameraBy(deltaX * 0.005f, deltaY * 0.005f);
-            }
-            teapot.draw();
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             SDL_GL_SwapWindow(window);
         }
     }
+    ImPlot::DestroyContext();
+#ifdef HAS_CURL
+    curl_global_cleanup();
+#endif
     SDL_GL_DeleteContext(ctx);
     SDL_Quit();
     return 0;
