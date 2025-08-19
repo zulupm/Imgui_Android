@@ -12,9 +12,25 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
-# Resolve OpenSSL libraries from the Android platform
-find_library(SSL_LIBRARY ssl REQUIRED)
-find_library(CRYPTO_LIBRARY crypto REQUIRED)
+
+# Locate OpenSSL libraries for the target architecture
+if(ANDROID)
+    if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+        set(_openssl_triple "aarch64-linux-android")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
+        set(_openssl_triple "arm-linux-androideabi")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86")
+        set(_openssl_triple "i686-linux-android")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+        set(_openssl_triple "x86_64-linux-android")
+    endif()
+    set(_openssl_path "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${_openssl_triple}")
+    find_library(SSL_LIBRARY NAMES ssl PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
+    find_library(CRYPTO_LIBRARY NAMES crypto PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
+else()
+    find_library(SSL_LIBRARY ssl REQUIRED)
+    find_library(CRYPTO_LIBRARY crypto REQUIRED)
+endif()
 
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
