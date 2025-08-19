@@ -24,7 +24,15 @@ if(ANDROID)
     elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
         set(_openssl_triple "x86_64-linux-android")
     endif()
-    set(_openssl_path "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${_openssl_triple}")
+
+    # Determine API level for sysroot search path
+    if(DEFINED CMAKE_SYSTEM_VERSION)
+        set(_openssl_api "${CMAKE_SYSTEM_VERSION}")
+    else()
+        set(_openssl_api "21")
+    endif()
+
+    set(_openssl_path "${CMAKE_SYSROOT}/usr/lib/${_openssl_triple}/${_openssl_api}")
     find_library(SSL_LIBRARY NAMES ssl PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
     find_library(CRYPTO_LIBRARY NAMES crypto PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
 else()
