@@ -25,6 +25,9 @@ jobs:
         with:
           packages: 'tools platform-tools platforms;android-34 build-tools;34.0.0 cmake;3.22.1 ndk;25.2.9519653'
 
+      - name: Install OpenSSL libraries
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

@@ -13,6 +13,33 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
 
+# Locate OpenSSL libraries for the target architecture
+if(ANDROID)
+    if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+        set(_openssl_triple "aarch64-linux-android")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
+        set(_openssl_triple "arm-linux-androideabi")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86")
+        set(_openssl_triple "i686-linux-android")
+    elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+        set(_openssl_triple "x86_64-linux-android")
+    endif()
+
+    # Determine API level for sysroot search path
+    if(DEFINED CMAKE_SYSTEM_VERSION)
+        set(_openssl_api "${CMAKE_SYSTEM_VERSION}")
+    else()
+        set(_openssl_api "21")
+    endif()
+
+    set(_openssl_path "${CMAKE_SYSROOT}/usr/lib/${_openssl_triple}/${_openssl_api}")
+    find_library(SSL_LIBRARY NAMES ssl PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
+    find_library(CRYPTO_LIBRARY NAMES crypto PATHS ${_openssl_path} NO_DEFAULT_PATH REQUIRED)
+else()
+    find_library(SSL_LIBRARY ssl REQUIRED)
+    find_library(CRYPTO_LIBRARY crypto REQUIRED)
+endif()
+
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
 set(IMGUI_PATH deps/imgui)
@@ -87,18 +114,9 @@ endif()
 
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-find_library(SSL_LIB ssl)
-find_library(CRYPTO_LIB crypto)
-
-set(OPTIONAL_SSL_LIBS)
-if (SSL_LIB AND CRYPTO_LIB)
-    list(APPEND OPTIONAL_SSL_LIBS ${SSL_LIB} ${CRYPTO_LIB})
-    target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
-else()
-    message(WARNING "SSL libraries not found; secure WebSocket connections disabled")
-endif()
-
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${OPTIONAL_SSL_LIBS})
+target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
+# Link against OpenSSL for secure WebSocket support
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} ${SSL_LIBRARY} ${CRYPTO_LIBRARY})
 target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient)
 
 
