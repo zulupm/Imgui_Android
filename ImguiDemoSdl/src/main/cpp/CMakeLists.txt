@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # This is an adaptation of the ImGui demo showcasing ImPlot for rendering plots.
 
@@ -88,9 +89,9 @@ endif()
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
-# Link against OpenSSL (BoringSSL in the Android NDK) for secure WebSocket support
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} ssl crypto)
-target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient)
+# Link against OpenSSL for secure WebSocket support
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} OpenSSL::SSL OpenSSL::Crypto)
+target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient ${OPENSSL_INCLUDE_DIR})
 
 
 
