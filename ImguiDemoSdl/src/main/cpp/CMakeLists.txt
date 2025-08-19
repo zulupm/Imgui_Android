@@ -87,15 +87,9 @@ endif()
 
 set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
-find_library(SSL_LIB ssl)
-find_library(CRYPTO_LIB crypto)
-
-if (NOT SSL_LIB OR NOT CRYPTO_LIB)
-    message(FATAL_ERROR "OpenSSL libraries not found; secure WebSocket connections require libssl and libcrypto")
-endif()
-
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
-target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} GLESv2 ${SSL_LIB} ${CRYPTO_LIB})
+# Link against OpenSSL (BoringSSL in the Android NDK) for secure WebSocket support
+target_link_libraries(demo PRIVATE ${SDL2_LIBRARY} ssl crypto)
 target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR} deps/implot deps deps/easywsclient)
 
 
