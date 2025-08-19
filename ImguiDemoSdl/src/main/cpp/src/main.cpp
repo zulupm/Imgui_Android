@@ -106,7 +106,97 @@ static SDL_GLContext createCtx(SDL_Window *w)
     return ctx;
 }
 
+static bool ToggleSwitch(const char* label, bool* v) {
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    float height = ImGui::GetFrameHeight();
+    float width = height * 1.6f;
+    float radius = height * 0.5f;
+    std::string id = std::string("##") + label;
+    ImGui::InvisibleButton(id.c_str(), ImVec2(width, height));
+    bool toggled = false;
+    if (ImGui::IsItemClicked()) {
+        *v = !*v;
+        toggled = true;
+    }
+    ImU32 col_bg = *v ? ImGui::GetColorU32(ImGuiCol_Button) : ImGui::GetColorU32(ImGuiCol_FrameBg);
+    if (ImGui::IsItemHovered())
+        col_bg = *v ? ImGui::GetColorU32(ImGuiCol_ButtonHovered) : ImGui::GetColorU32(ImGuiCol_FrameBgHovered);
+    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, radius);
+    draw_list->AddCircleFilled(ImVec2(*v ? p.x + width - radius : p.x + radius, p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
+    ImGui::SameLine();
+    ImGui::TextUnformatted(label);
+    return toggled;
+}
 
+static void ApplyMaterialTheme(bool dark, ImVec4& clear_color, float scale) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+    ImVec4 accent = dark ? ImVec4(0.73f, 0.53f, 0.99f, 1.0f) : ImVec4(0.26f, 0.47f, 0.96f, 1.0f);
+    ImVec4 bg = dark ? ImVec4(0.12f, 0.12f, 0.12f, 1.0f) : ImVec4(0.95f, 0.95f, 0.95f, 1.0f);
+    ImVec4 surface = dark ? ImVec4(0.18f, 0.18f, 0.18f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    ImVec4 text = dark ? ImVec4(1.0f, 1.0f, 1.0f, 1.0f) : ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    if (dark)
+        ImGui::StyleColorsDark();
+    else
+        ImGui::StyleColorsLight();
+
+    colors[ImGuiCol_Text]               = text;
+    colors[ImGuiCol_WindowBg]           = bg;
+    colors[ImGuiCol_ChildBg]            = bg;
+    colors[ImGuiCol_PopupBg]            = surface;
+    colors[ImGuiCol_FrameBg]            = surface;
+    colors[ImGuiCol_FrameBgHovered]     = ImVec4(accent.x, accent.y, accent.z, 0.4f);
+    colors[ImGuiCol_FrameBgActive]      = ImVec4(accent.x, accent.y, accent.z, 0.6f);
+    colors[ImGuiCol_Button]             = ImVec4(accent.x, accent.y, accent.z, 0.8f);
+    colors[ImGuiCol_ButtonHovered]      = ImVec4(accent.x, accent.y, accent.z, 1.0f);
+    colors[ImGuiCol_ButtonActive]       = ImVec4(accent.x, accent.y, accent.z, 0.6f);
+    colors[ImGuiCol_Header]             = ImVec4(accent.x, accent.y, accent.z, 0.8f);
+    colors[ImGuiCol_HeaderHovered]      = ImVec4(accent.x, accent.y, accent.z, 1.0f);
+    colors[ImGuiCol_HeaderActive]       = ImVec4(accent.x, accent.y, accent.z, 0.6f);
+    colors[ImGuiCol_Tab]                = surface;
+    colors[ImGuiCol_TabHovered]         = colors[ImGuiCol_ButtonHovered];
+    colors[ImGuiCol_TabActive]          = colors[ImGuiCol_ButtonActive];
+    colors[ImGuiCol_TabUnfocused]       = surface;
+    colors[ImGuiCol_TabUnfocusedActive] = colors[ImGuiCol_TabActive];
+    colors[ImGuiCol_CheckMark]          = accent;
+    colors[ImGuiCol_SliderGrab]         = accent;
+    colors[ImGuiCol_SliderGrabActive]   = accent;
+
+    style.WindowRounding = 6.0f;
+    style.FrameRounding = 6.0f;
+    style.GrabRounding = 6.0f;
+    style.FramePadding = ImVec2(12.0f, 8.0f);
+    style.ItemSpacing = ImVec2(8.0f, 12.0f);
+    style.ScrollbarSize = 24.0f;
+    style.GrabMinSize = 20.0f;
+    style.TouchExtraPadding = ImVec2(8.0f, 8.0f);
+    style.ScaleAllSizes(scale);
+
+    ImPlotStyle& plotStyle = ImPlot::GetStyle();
+    plotStyle.Colors[ImPlotCol_Line]          = accent;
+    plotStyle.Colors[ImPlotCol_Fill]          = ImVec4(accent.x, accent.y, accent.z, 0.25f);
+    plotStyle.Colors[ImPlotCol_MarkerOutline] = accent;
+    plotStyle.Colors[ImPlotCol_MarkerFill]    = accent;
+    plotStyle.Colors[ImPlotCol_FrameBg]       = surface;
+    plotStyle.Colors[ImPlotCol_PlotBg]        = bg;
+    plotStyle.Colors[ImPlotCol_PlotBorder]    = dark ? ImVec4(0.3f, 0.3f, 0.3f, 1.0f) : ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+    plotStyle.Colors[ImPlotCol_LegendBg]      = surface;
+    plotStyle.Colors[ImPlotCol_LegendBorder]  = plotStyle.Colors[ImPlotCol_PlotBorder];
+    plotStyle.Colors[ImPlotCol_LegendText]    = text;
+    plotStyle.Colors[ImPlotCol_TitleText]     = text;
+    plotStyle.Colors[ImPlotCol_AxisText]      = text;
+    plotStyle.Colors[ImPlotCol_AxisGrid]      = plotStyle.Colors[ImPlotCol_PlotBorder];
+    plotStyle.Colors[ImPlotCol_AxisTick]      = plotStyle.Colors[ImPlotCol_PlotBorder];
+    plotStyle.Colors[ImPlotCol_Selection]     = ImVec4(accent.x, accent.y, accent.z, 0.25f);
+    plotStyle.Colors[ImPlotCol_Crosshairs]    = text;
+    plotStyle.LineWeight = 2.0f;
+    plotStyle.MarkerSize = 6.0f;
+    plotStyle.ScaleAllSizes(scale);
+
+    clear_color = bg;
+}
 
 int main(int argc, char** argv)
 {
@@ -143,7 +233,14 @@ int main(int argc, char** argv)
     ImGui_ImplSDL2_InitForOpenGL(window, ctx);
     ImGui_ImplOpenGL3_Init(imguiShaderVersions); // Select proper OpenGL version automagically
 
-    ImGui::StyleColorsDark();
+    int display_w, display_h;
+    SDL_GetWindowSize(window, &display_w, &display_h);
+    float ui_scale = std::max(1.0f, static_cast<float>(display_w) / 1280.0f);
+
+    ImVec4 clear_color;
+    bool dark_mode = true;
+    bool show_settings = false;
+    ApplyMaterialTheme(dark_mode, clear_color, ui_scale);
 
     // Load Fonts
     // (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -151,11 +248,10 @@ int main(int argc, char** argv)
     //io.Fonts->AddFontDefault();
     //io.Fonts->AddFontFromFileTTF("../../extra_fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../extra_fonts/DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", 32.0f);
+    io.Fonts->AddFontFromFileTTF("Roboto-Medium.ttf", 32.0f * ui_scale);
 
     bool show_test_window = true;
     bool show_another_window = false;
-    ImVec4 clear_color = ImColor(114, 144, 154);
 
     std::vector<double> btc_x, btc_prices;
     std::vector<double> eth_x, eth_prices;
@@ -211,6 +307,30 @@ int main(int argc, char** argv)
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();
+
+            ImVec2 btn_size(36.0f * ui_scale, 36.0f * ui_scale);
+            ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - btn_size.x - 8.0f, 8.0f), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(btn_size);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+            ImGui::Begin("SettingsButton", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
+            if (ImGui::Button("⚙"))
+                show_settings = !show_settings;
+            ImGui::End();
+            ImGui::PopStyleVar();
+
+            if (show_settings) {
+                float panel_width = 280.0f * ui_scale;
+                ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - panel_width, 0), ImGuiCond_Always);
+                ImGui::SetNextWindowSize(ImVec2(panel_width, io.DisplaySize.y));
+                ImGui::Begin("Settings", &show_settings, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+                ImGui::TextUnformatted("Appearance");
+                ImGui::Separator();
+                if (ToggleSwitch("Dark mode", &dark_mode)) {
+                    ApplyMaterialTheme(dark_mode, clear_color, ui_scale);
+                }
+                ImGui::End();
+            }
+
             // 1. Show a simple window
             // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
             {
