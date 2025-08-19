@@ -3,6 +3,25 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+import java.util.Properties
+
+def versionPropsFile = file("version.properties")
+def versionProps = new Properties()
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+} else {
+    versionProps['VERSION_CODE'] = "1"
+    versionProps.store(new FileOutputStream(versionPropsFile), null)
+}
+
+def shouldIncrement = gradle.startParameter.taskNames.any { it.toLowerCase().contains("assemble") || it.toLowerCase().contains("bundle") }
+def versionCodeValue = versionProps['VERSION_CODE'].toInteger()
+if (shouldIncrement) {
+    versionCodeValue++
+    versionProps['VERSION_CODE'] = versionCodeValue.toString()
+    versionProps.store(new FileOutputStream(versionPropsFile), null)
+}
+
 android {
     namespace = "me.sfalexrog.imguidemo"
     compileSdkVersion 34
@@ -12,7 +31,7 @@ android {
         applicationId "me.sfalexrog.imguidemo"
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 1
+        versionCode versionCodeValue
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
