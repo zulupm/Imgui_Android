@@ -129,6 +129,33 @@ static bool ToggleSwitch(const char* label, bool* v) {
     return toggled;
 }
 
+static void ScalePlotStyle(ImPlotStyle& style, float scale) {
+    style.LineWeight *= scale;
+    style.MarkerSize *= scale;
+    style.MarkerWeight *= scale;
+    style.ErrorBarSize *= scale;
+    style.ErrorBarWeight *= scale;
+    style.DigitalBitHeight *= scale;
+    style.DigitalBitGap *= scale;
+    style.PlotBorderSize *= scale;
+    style.MajorTickLen = ImVec2(style.MajorTickLen.x * scale, style.MajorTickLen.y * scale);
+    style.MinorTickLen = ImVec2(style.MinorTickLen.x * scale, style.MinorTickLen.y * scale);
+    style.MajorTickSize = ImVec2(style.MajorTickSize.x * scale, style.MajorTickSize.y * scale);
+    style.MinorTickSize = ImVec2(style.MinorTickSize.x * scale, style.MinorTickSize.y * scale);
+    style.MajorGridSize = ImVec2(style.MajorGridSize.x * scale, style.MajorGridSize.y * scale);
+    style.MinorGridSize = ImVec2(style.MinorGridSize.x * scale, style.MinorGridSize.y * scale);
+    style.PlotPadding = ImVec2(style.PlotPadding.x * scale, style.PlotPadding.y * scale);
+    style.LabelPadding = ImVec2(style.LabelPadding.x * scale, style.LabelPadding.y * scale);
+    style.LegendPadding = ImVec2(style.LegendPadding.x * scale, style.LegendPadding.y * scale);
+    style.LegendInnerPadding = ImVec2(style.LegendInnerPadding.x * scale, style.LegendInnerPadding.y * scale);
+    style.LegendSpacing = ImVec2(style.LegendSpacing.x * scale, style.LegendSpacing.y * scale);
+    style.MousePosPadding = ImVec2(style.MousePosPadding.x * scale, style.MousePosPadding.y * scale);
+    style.AnnotationPadding = ImVec2(style.AnnotationPadding.x * scale, style.AnnotationPadding.y * scale);
+    style.FitPadding = ImVec2(style.FitPadding.x * scale, style.FitPadding.y * scale);
+    style.PlotDefaultSize = ImVec2(style.PlotDefaultSize.x * scale, style.PlotDefaultSize.y * scale);
+    style.PlotMinSize = ImVec2(style.PlotMinSize.x * scale, style.PlotMinSize.y * scale);
+}
+
 static void ApplyMaterialTheme(bool dark, ImVec4& clear_color, float scale) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -175,6 +202,7 @@ static void ApplyMaterialTheme(bool dark, ImVec4& clear_color, float scale) {
     style.ScaleAllSizes(scale);
 
     ImPlotStyle& plotStyle = ImPlot::GetStyle();
+    ScalePlotStyle(plotStyle, scale);
     plotStyle.Colors[ImPlotCol_Line]          = accent;
     plotStyle.Colors[ImPlotCol_Fill]          = ImVec4(accent.x, accent.y, accent.z, 0.25f);
     plotStyle.Colors[ImPlotCol_MarkerOutline] = accent;
@@ -191,9 +219,9 @@ static void ApplyMaterialTheme(bool dark, ImVec4& clear_color, float scale) {
     plotStyle.Colors[ImPlotCol_AxisTick]      = plotStyle.Colors[ImPlotCol_PlotBorder];
     plotStyle.Colors[ImPlotCol_Selection]     = ImVec4(accent.x, accent.y, accent.z, 0.25f);
     plotStyle.Colors[ImPlotCol_Crosshairs]    = text;
-    plotStyle.LineWeight = 2.0f;
-    plotStyle.MarkerSize = 6.0f;
-    plotStyle.ScaleAllSizes(scale);
+    plotStyle.LineWeight = 2.0f * scale;
+    plotStyle.MarkerSize = 6.0f * scale;
+    plotStyle.MarkerWeight = 1.0f * scale;
 
     clear_color = bg;
 }
