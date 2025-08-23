@@ -43,7 +43,7 @@ and accept the licenses. If you don't have an NDK, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "ndk;25.2.9519653"
 
-This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure both `ANDROID_SDK_ROOT` and `ANDROID_NDK_ROOT` environment variables are set, with `ANDROID_NDK_ROOT` pointing to that directory, so Gradle can locate the SDK and matching NDK version. Create a `local.properties` file (or copy `local.properties.example`) with:
+This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure `ANDROID_SDK_ROOT`, `ANDROID_NDK_HOME`, and `ANDROID_NDK_ROOT` environment variables all point to this NDK directory so both Gradle and the OpenSSL build scripts can locate the toolchain. Create a `local.properties` file (or copy `local.properties.example`) with:
 
 ```
 sdk.dir=/absolute/path/to/android/sdk

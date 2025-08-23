@@ -13,6 +13,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 ## Environment
 - Install the Android SDK and NDK and set `sdk.dir` and `ndk.dir` in `local.properties`.
 - Use NDK version `25.2.9519653` for builds.
+- Export `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` so build scripts can locate the toolchain.
 - Build OpenSSL for each Android ABI and expose its base directory via the `OPENSSL_ROOT` environment variable or `openssl.dir` in `local.properties`.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
