@@ -4,10 +4,17 @@
 These instructions apply to the entire repository unless a more specific `AGENTS.md` exists in a subdirectory.
 
 ## Workflow
-- Ensure your branch is up to date with the target branch by rebasing or merging before making changes and again before committing or submitting a PR to avoid merge conflicts when multiple PRs are in progress.
+- Check for `AGENTS.md` files in any directories you touch and follow their instructions.
+- Ensure your branch is up to date with the target branch before and after making changes to avoid conflicts.
+- Use `rg` for searching the codebase and avoid `ls -R` or `grep -R`.
 - Follow the existing code style for Kotlin, C++, and build scripts.
-- Keep commits focused and easy to review.
-- Use clear, imperative commit messages (e.g., `Add feature X`).
+- Keep commits focused and easy to review with clear, imperative messages (e.g., `Add feature X`).
+
+## Environment
+- Install the Android SDK and NDK and set `sdk.dir` and `ndk.dir` in `local.properties`.
+- Use NDK version `25.2.9519653` for builds.
+- Provide `OPENSSL_ROOT_DIR` pointing to per-ABI `include` and `lib` directories so TLS libraries can be located.
+- The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing
 - Run `./gradlew test` before committing to execute unit tests and basic checks.
