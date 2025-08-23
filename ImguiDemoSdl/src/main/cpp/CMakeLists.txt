@@ -89,21 +89,26 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
-find_package(OpenSSL REQUIRED)
-
 if (ANDROID)
+    set(OPENSSL_ROOT "$ENV{OPENSSL_ROOT_DIR}/${ANDROID_ABI}")
+    find_library(SSL_LIB ssl HINTS ${OPENSSL_ROOT}/lib NO_CMAKE_SYSTEM_PATH)
+    find_library(CRYPTO_LIB crypto HINTS ${OPENSSL_ROOT}/lib NO_CMAKE_SYSTEM_PATH)
+    if (NOT SSL_LIB OR NOT CRYPTO_LIB)
+        message(FATAL_ERROR "OpenSSL libraries not found; secure WebSocket connections disabled")
+    endif()
     target_link_libraries(demo PRIVATE
             ${SDL2_LIBRARY}
             GLESv2
-            OpenSSL::SSL
-            OpenSSL::Crypto)
+            ${SSL_LIB}
+            ${CRYPTO_LIB})
     target_include_directories(demo PRIVATE
             ${SDL2_INCLUDE_DIR}
             deps/implot
             deps
             deps/easywsclient
-            ${OPENSSL_INCLUDE_DIR})
+            ${OPENSSL_ROOT}/include)
 else()
+    find_package(OpenSSL REQUIRED)
     target_link_libraries(demo PRIVATE
             ${SDL2_LIBRARY}
             OpenSSL::SSL
