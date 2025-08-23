@@ -32,16 +32,16 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, Android SDK, NDK, Android-specific cmake, and OpenSSL libraries (`libssl-dev`) in order to build this demo with secure WebSocket support. Good thing is, you only really need the
-SDK and NDK parts, gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
+You'll need OpenJDK 1.8, Android SDK, NDK, Android-specific cmake, and OpenSSL libraries (`libssl-dev`) in order to build this demo with secure WebSocket support. The project targets NDK version 25.2.9519653 (r25c).
+Good thing is, you only really need the SDK and NDK parts; Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
 
 and accept the licenses. If you don't have an NDK, run
 
-    ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager ndk-bundle
+    ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "ndk;25.2.9519653"
 
-This will download the latest NDK and put it into `${ANDROID_SDK_ROOT}/ndk-bundle`. Ensure both `ANDROID_SDK_ROOT` and `ANDROID_NDK_ROOT` environment variables are set so Gradle can locate the SDK and NDK.
+This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure both `ANDROID_SDK_ROOT` and `ANDROID_NDK_ROOT` environment variables are set, with `ANDROID_NDK_ROOT` pointing to that directory, so Gradle can locate the SDK and matching NDK version.
 
 Then, download the project and its submodules:
 
