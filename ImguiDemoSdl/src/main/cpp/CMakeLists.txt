@@ -90,11 +90,10 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
 if (ANDROID)
-    set(OPENSSL_ROOT "$ENV{OPENSSL_ROOT_DIR}/${ANDROID_ABI}")
-    find_library(SSL_LIB ssl HINTS ${OPENSSL_ROOT}/lib NO_CMAKE_SYSTEM_PATH)
-    find_library(CRYPTO_LIB crypto HINTS ${OPENSSL_ROOT}/lib NO_CMAKE_SYSTEM_PATH)
+    find_library(SSL_LIB NAMES ssl)
+    find_library(CRYPTO_LIB NAMES crypto)
     if (NOT SSL_LIB OR NOT CRYPTO_LIB)
-        message(FATAL_ERROR "OpenSSL libraries not found; secure WebSocket connections disabled")
+        message(FATAL_ERROR "TLS libraries not found; secure WebSocket connections disabled")
     endif()
     target_link_libraries(demo PRIVATE
             ${SDL2_LIBRARY}
@@ -105,8 +104,7 @@ if (ANDROID)
             ${SDL2_INCLUDE_DIR}
             deps/implot
             deps
-            deps/easywsclient
-            ${OPENSSL_ROOT}/include)
+            deps/easywsclient)
 else()
     find_package(OpenSSL REQUIRED)
     target_link_libraries(demo PRIVATE

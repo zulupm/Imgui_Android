@@ -13,7 +13,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 ## Environment
 - Install the Android SDK and NDK and set `sdk.dir` and `ndk.dir` in `local.properties`.
 - Use NDK version `25.2.9519653` for builds.
-- Provide `OPENSSL_ROOT_DIR` pointing to per-ABI `include` and `lib` directories so TLS libraries can be located.
+- Rely on the NDK's bundled TLS libraries (`ssl` and `crypto`); ensure `minSdkVersion` is 21 or higher so they are available.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing
