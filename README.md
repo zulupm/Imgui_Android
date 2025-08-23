@@ -5,6 +5,7 @@ The demo now ships with a Material-inspired theme featuring a bright accent colo
 ![screenshot](https://raw.githubusercontent.com/sfalexrog/Imgui_Android/master/screenshot/screenshot.png)
 
 The running build number is displayed in the corner for quick version identification.
+Recent WebSocket messages are also visible in a dedicated log window to help with debugging network traffic.
 
 ## What?
 
@@ -32,7 +33,7 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, Android SDK, NDK, Android-specific cmake, and OpenSSL libraries (`libssl-dev`) in order to build this demo with secure WebSocket support. The project targets NDK version 25.2.9519653 (r25c).
+You'll need OpenJDK 1.8, Android SDK, NDK, Android-specific cmake, and OpenSSL libraries (`libssl-dev`) in order to build this demo with secure WebSocket support. The project targets NDK version 25.2.9519653 (r25c). Set `OPENSSL_ROOT_DIR` to the root of your OpenSSL installation if it's not in a standard location.
 Good thing is, you only really need the SDK and NDK parts; Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
