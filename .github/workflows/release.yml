@@ -38,7 +38,6 @@ jobs:
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           echo "ndk.dir=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> local.properties
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
-          echo "OPENSSL_ROOT_DIR=/usr" >> $GITHUB_ENV
 
       - name: Build release APK
         run: ./gradlew assembleRelease
