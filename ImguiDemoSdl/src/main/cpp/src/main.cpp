@@ -12,6 +12,7 @@
 #include "imgui_impl_sdl_gl3.h"
 #endif
 #include "teapot.h"
+#include "websocket_client.h"
 
 #include <unistd.h>
 #include <dirent.h>
@@ -162,6 +163,7 @@ int main(int argc, char** argv)
     bool show_another_window = false;
     ImVec4 clear_color = ImColor(114, 144, 154);
 
+    WebSocketClient wsClient;
     Log(LOG_INFO) << "Entering main loop";
     {
 
@@ -255,6 +257,29 @@ int main(int argc, char** argv)
                 ImGui::SliderFloat("Teapot rotation", &teapotRotation, 0, 2 * M_PI);
                 ImGui::Checkbox("Rotate synchronously", &rotateSync);
                 ImGui::Text("Zoom value: %f", teapot.zoomValue());
+                ImGui::End();
+            }
+
+            // 5. WebSocket debug window
+            {
+                ImGui::Begin("WebSocket Debug");
+                static char url[256] = "echo.websocket.events";
+                ImGui::InputText("URL", url, IM_ARRAYSIZE(url));
+                WSState wsState = wsClient.state();
+                if (wsState == WSState::DISCONNECTED && ImGui::Button("Connect"))
+                    wsClient.connect(url);
+                if (wsState == WSState::CONNECTED && ImGui::Button("Disconnect"))
+                    wsClient.disconnect();
+                const char* stateStr = "Unknown";
+                switch (wsState) {
+                    case WSState::DISCONNECTED: stateStr = "Disconnected"; break;
+                    case WSState::CONNECTING: stateStr = "Connecting"; break;
+                    case WSState::CONNECTED: stateStr = "Connected"; break;
+                    case WSState::ERROR: stateStr = "Error"; break;
+                }
+                ImGui::Text("State: %s", stateStr);
+                for (const auto& line : wsClient.logs())
+                    ImGui::TextUnformatted(line.c_str());
                 ImGui::End();
             }
 

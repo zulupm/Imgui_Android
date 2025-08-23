@@ -10,6 +10,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(SDL2 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBWEBSOCKETS REQUIRED libwebsockets)
+find_package(OpenSSL REQUIRED)
 
 # This is an adaptation of the ImGui demo, with some geometry (a teapot)
 # rendered in order to check the ImGui implementation. Teapot is taken
@@ -62,9 +65,10 @@ else()
     )
 endif()
 
-target_link_libraries(demo ${SDL2_LIBRARY} glm GLESv2)
+target_link_libraries(demo ${SDL2_LIBRARY} glm GLESv2 ${LIBWEBSOCKETS_LIBRARIES} OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(demo PRIVATE ${SDL2_INCLUDE_DIR})
 target_include_directories(demo PRIVATE ${IMGUI_PATH})
 target_include_directories(demo PRIVATE ${IMGUI_IMPL_PATH})
 target_include_directories(demo PRIVATE ${GLLOAD_PATH})
+target_include_directories(demo PRIVATE ${LIBWEBSOCKETS_INCLUDE_DIRS})
 target_compile_definitions(demo PRIVATE ${GL_PROFILES})
