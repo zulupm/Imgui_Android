@@ -36,6 +36,29 @@ jobs:
           echo "ndk.dir=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> local.properties
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
+      - name: Build OpenSSL
+        run: |
+          OPENSSL_VERSION=1.1.1w
+          curl -sL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz | tar xz
+          export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653
+          export PATH="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
+          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
+            case $ABI in
+              armeabi-v7a) TARGET=android-arm; HOST=armv7a-linux-androideabi ;;
+              arm64-v8a) TARGET=android-arm64; HOST=aarch64-linux-android ;;
+              x86) TARGET=android-x86; HOST=i686-linux-android ;;
+              x86_64) TARGET=android-x86_64; HOST=x86_64-linux-android ;;
+            esac
+            mkdir -p $HOME/openssl/$ABI
+            pushd openssl-$OPENSSL_VERSION
+            make clean || true
+            CC=${HOST}21-clang ./Configure $TARGET no-shared --prefix=$HOME/openssl/$ABI -D__ANDROID_API__=21
+            make -j$(nproc)
+            make install_sw
+            popd
+          done
+          echo "OPENSSL_ROOT=$HOME/openssl" >> $GITHUB_ENV
+
       - name: Build release APK
         run: ./gradlew assembleRelease
       - name: Rename APK with run number and timestamp

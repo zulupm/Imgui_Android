@@ -89,30 +89,29 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
-if (ANDROID)
-    target_link_libraries(demo PRIVATE
-            ${SDL2_LIBRARY}
-            GLESv2
-            ssl
-            crypto)
-    target_include_directories(demo PRIVATE
-            ${SDL2_INCLUDE_DIR}
-            deps/implot
-            deps
-            deps/easywsclient)
-else()
-    find_package(OpenSSL REQUIRED)
-    target_link_libraries(demo PRIVATE
-            ${SDL2_LIBRARY}
-            OpenSSL::SSL
-            OpenSSL::Crypto)
-    target_include_directories(demo PRIVATE
-            ${SDL2_INCLUDE_DIR}
-            deps/implot
-            deps
-            deps/easywsclient
-            ${OPENSSL_INCLUDE_DIR})
+if(ANDROID)
+    if(DEFINED OPENSSL_ROOT)
+        set(OPENSSL_ROOT_DIR "${OPENSSL_ROOT}/${ANDROID_ABI}")
+    elseif(DEFINED ENV{OPENSSL_ROOT})
+        set(OPENSSL_ROOT_DIR "$ENV{OPENSSL_ROOT}/${ANDROID_ABI}")
+    else()
+        message(FATAL_ERROR "OpenSSL root not specified; set OPENSSL_ROOT in Gradle or the environment")
+    endif()
+    set(OPENSSL_USE_STATIC_LIBS ON)
 endif()
+
+find_package(OpenSSL REQUIRED)
+
+target_link_libraries(demo PRIVATE
+        ${SDL2_LIBRARY}
+        OpenSSL::SSL
+        OpenSSL::Crypto)
+
+target_include_directories(demo PRIVATE
+        ${SDL2_INCLUDE_DIR}
+        deps/implot
+        deps
+        deps/easywsclient)
 
 
 

@@ -33,8 +33,9 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, the Android SDK, the NDK, and Android-specific CMake in order to build this demo with secure WebSocket support. TLS is provided by the NDK's bundled `ssl` and `crypto` libraries, which require a minimum API level of 21.
-Good thing is, you only really need the SDK and NDK parts; Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
+You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), Android-specific CMake, and OpenSSL built for each Android ABI in order to build this demo with secure WebSocket support. Place the per-ABI OpenSSL installations under a common directory (e.g. `$HOME/openssl/<abi>` for `armeabi-v7a`, `arm64-v8a`, `x86`, and `x86_64`) and expose the base path via the `OPENSSL_ROOT` environment variable or an `openssl.dir` entry in `local.properties`.
+
+Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
 
@@ -47,9 +48,10 @@ This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.951965
 ```
 sdk.dir=/absolute/path/to/android/sdk
 ndk.dir=/absolute/path/to/android/sdk/ndk/25.2.9519653
+openssl.dir=/absolute/path/to/openssl
 ```
 
-Gradle uses these paths to find your SDK and matching NDK installation.
+Gradle uses these paths to find your SDK, matching NDK, and OpenSSL installation.
 
 Then, download the project and its submodules:
 
