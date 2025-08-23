@@ -29,32 +29,21 @@ jobs:
         run: |
           OPENSSL_VERSION=1.1.1w
           curl -sL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz | tar xz
-          export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653
-          export PATH="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653
+          export ANDROID_NDK=$ANDROID_NDK_HOME
+          export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
           API=19
           for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
             case $ABI in
-              armeabi-v7a)
-                TARGET=android-arm
-                HOST=armv7a-linux-androideabi
-                ;;
-              arm64-v8a)
-                TARGET=android-arm64
-                HOST=aarch64-linux-android
-                ;;
-              x86)
-                TARGET=android-x86
-                HOST=i686-linux-android
-                ;;
-              x86_64)
-                TARGET=android-x86_64
-                HOST=x86_64-linux-android
-                ;;
+              armeabi-v7a) TARGET=android-arm ;;
+              arm64-v8a) TARGET=android-arm64 ;;
+              x86) TARGET=android-x86 ;;
+              x86_64) TARGET=android-x86_64 ;;
             esac
             mkdir -p $HOME/openssl/$ABI
             pushd openssl-$OPENSSL_VERSION
             make clean || true
-            CC=${HOST}${API}-clang ./Configure $TARGET no-shared --prefix=$HOME/openssl/$ABI -D__ANDROID_API__=$API
+            ./Configure $TARGET no-shared --prefix=$HOME/openssl/$ABI -D__ANDROID_API__=$API
             make -j$(nproc)
             make install_sw
             popd
