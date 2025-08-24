@@ -98,15 +98,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(mbedtls)
 
-# Replace the absolute MBEDTLS_CONFIG_FILE definition with a relative path for all
-# mbedTLS targets so the configuration header is found consistently across builds.
+# Propagate the custom configuration header to all fetched mbedTLS targets
 foreach(mbed_target mbedtls mbedcrypto mbedx509)
-    get_target_property(defs ${mbed_target} COMPILE_DEFINITIONS)
-    if(defs)
-        list(FILTER defs EXCLUDE REGEX "^MBEDTLS_CONFIG_FILE=")
-        set_target_properties(${mbed_target} PROPERTIES COMPILE_DEFINITIONS "${defs}")
-    endif()
     target_compile_definitions(${mbed_target} PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+    target_include_directories(${mbed_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 endforeach()
 
 target_link_libraries(demo PRIVATE
