@@ -29,7 +29,7 @@ android {
 //    buildToolsVersion "30.0.2"
     defaultConfig {
         applicationId "me.sfalexrog.imguidemo"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 34
         versionCode versionCodeValue
         versionName "1.0"
@@ -38,6 +38,7 @@ android {
             cmake {
                 cFlags "-std=c11"
                 cppFlags "-std=c++11"
+                arguments "-DANDROID_PLATFORM=android-21"
             }
         }
     }
