@@ -16,6 +16,22 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Restore OpenSSL cache
+        id: openssl-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/openssl
+          key: ${{ runner.os }}-openssl-1.1.1w
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -38,6 +54,7 @@ jobs:
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
       - name: Build OpenSSL
+        if: steps.openssl-cache.outputs.cache-hit != 'true'
         run: |
           OPENSSL_VERSION=1.1.1w
           curl -sL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz | tar xz
@@ -61,7 +78,11 @@ jobs:
             make clean
             popd
           done
-          echo "OPENSSL_ROOT=$HOME/openssl" >> $GITHUB_ENV
+      - name: Use cached OpenSSL
+        if: steps.openssl-cache.outputs.cache-hit == 'true'
+        run: echo "Using cached OpenSSL"
+      - name: Export OpenSSL root
+        run: echo "OPENSSL_ROOT=$HOME/openssl" >> $GITHUB_ENV
 
       - name: Build release APK
         run: ./gradlew assembleRelease

@@ -46,6 +46,9 @@ android {
                 cFlags "-std=c11"
                 cppFlags "-std=c++11"
                 arguments "-DANDROID_PLATFORM=android-21"
+                if (opensslRoot != null) {
+                    arguments "-DOPENSSL_ROOT=${opensslRoot}"
+                }
             }
         }
     }
@@ -59,9 +62,6 @@ android {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
             version "3.22.1"
-            if (opensslRoot != null) {
-                arguments "-DOPENSSL_ROOT=${opensslRoot}"
-            }
         }
     }
 
