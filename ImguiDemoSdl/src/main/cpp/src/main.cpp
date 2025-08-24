@@ -18,6 +18,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <deque>
 #include "easywsclient.hpp"
 #include <nlohmann/json.hpp>
 
@@ -221,6 +222,8 @@ int main(int argc, char** argv)
     WebSocket::pointer ws_btc = WebSocket::from_url("wss://stream.binance.com:9443/ws/btcusdt@trade");
     WebSocket::pointer ws_eth = WebSocket::from_url("wss://stream.binance.com:9443/ws/ethusdt@trade");
     const size_t max_points = 1000;
+    std::deque<std::string> ws_log;
+    const size_t max_log = 50;
 
     Log(LOG_INFO) << "Entering main loop";
     {
@@ -239,7 +242,7 @@ int main(int argc, char** argv)
             }
             if (ws_btc) {
                 ws_btc->poll();
-                ws_btc->dispatch([&btc_prices, &btc_x, max_points](const std::string& msg){
+                ws_btc->dispatch([&btc_prices, &btc_x, max_points, &ws_log, max_log](const std::string& msg){
                     try {
                         auto j = nlohmann::json::parse(msg);
                         double price = std::stod(j["p"].get<std::string>());
@@ -249,12 +252,14 @@ int main(int argc, char** argv)
                             btc_prices.erase(btc_prices.begin());
                             btc_x.erase(btc_x.begin());
                         }
+                        ws_log.push_back("BTC: " + std::to_string(price));
+                        if (ws_log.size() > max_log) ws_log.pop_front();
                     } catch (...) {}
                 });
             }
             if (ws_eth) {
                 ws_eth->poll();
-                ws_eth->dispatch([&eth_prices, &eth_x, max_points](const std::string& msg){
+                ws_eth->dispatch([&eth_prices, &eth_x, max_points, &ws_log, max_log](const std::string& msg){
                     try {
                         auto j = nlohmann::json::parse(msg);
                         double price = std::stod(j["p"].get<std::string>());
@@ -264,6 +269,8 @@ int main(int argc, char** argv)
                             eth_prices.erase(eth_prices.begin());
                             eth_x.erase(eth_x.begin());
                         }
+                        ws_log.push_back("ETH: " + std::to_string(price));
+                        if (ws_log.size() > max_log) ws_log.pop_front();
                     } catch (...) {}
                 });
             }
@@ -317,7 +324,15 @@ int main(int argc, char** argv)
                 ImGui::ShowDemoWindow(&show_test_window);
             }
 
-            // 4. Show crypto price plots
+            // 4. Show WebSocket log window
+            if (ImGui::Begin("WebSocket Log")) {
+                for (const auto& entry : ws_log) {
+                    ImGui::TextUnformatted(entry.c_str());
+                }
+            }
+            ImGui::End();
+
+            // 5. Show crypto price plots
             if (ImGui::Begin("Crypto Prices")) {
                 if (ImPlot::BeginPlot("BTC/ETH")) {
                     if (!btc_prices.empty())

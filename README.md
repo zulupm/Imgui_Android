@@ -5,6 +5,7 @@ The demo now ships with a Material-inspired theme featuring a bright accent colo
 ![screenshot](https://raw.githubusercontent.com/sfalexrog/Imgui_Android/master/screenshot/screenshot.png)
 
 The running build number is displayed in the corner for quick version identification.
+Recent WebSocket messages are also visible in a dedicated log window to help with debugging network traffic.
 
 ## What?
 
@@ -32,16 +33,24 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, Android SDK, NDK, and Android-specific cmake in order to build this demo. Good thing is, you only really need the
-SDK and NDK parts, gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
+You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), and Android-specific CMake. The native code fetches and links against mbedTLS for secure WebSocket connections, so no extra TLS packages are required.
+
+Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager --licenses
 
 and accept the licenses. If you don't have an NDK, run
 
-    ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager ndk-bundle
+    ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "ndk;25.2.9519653"
 
-This will download the latest NDK and put it into `${ANDROID_SDK_ROOT}/ndk-bundle`.
+This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure `ANDROID_SDK_ROOT`, `ANDROID_NDK_HOME`, and `ANDROID_NDK_ROOT` environment variables all point to this NDK directory so Gradle can locate the toolchain. Create a `local.properties` file (or copy `local.properties.example`) with:
+
+```
+sdk.dir=/absolute/path/to/android/sdk
+ndk.dir=/absolute/path/to/android/sdk/ndk/25.2.9519653
+```
+
+Gradle uses these paths to find your SDK and matching NDK installation.
 
 Then, download the project and its submodules:
 
