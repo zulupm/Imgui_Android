@@ -18,6 +18,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 - Ensure the NDK path in `local.properties` matches `android.ndkVersion` to avoid version conflicts.
 - Export `ANDROID_SDK_ROOT` and `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` so build scripts and CI workflows can locate the toolchains consistently.
 - Link against the NDK's bundled TLS libraries (BoringSSL); if TLS libraries are reported missing, fix the environment instead of disabling secure WebSockets.
+- Include BoringSSL headers from `${ANDROID_NDK}/sources/third_party/openssl/include` so native code can find `openssl/ssl.h`.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing
