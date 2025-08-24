@@ -90,16 +90,22 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
 if(ANDROID)
-    if(NOT DEFINED OPENSSL_BASE)
-        message(FATAL_ERROR "OPENSSL_BASE not set; please provide path with per-ABI OpenSSL builds")
+    find_library(SSL_LIB ssl)
+    find_library(CRYPTO_LIB crypto)
+    if(NOT SSL_LIB OR NOT CRYPTO_LIB)
+        message(FATAL_ERROR "TLS libraries not found; secure WebSocket connections disabled")
     endif()
-    set(OPENSSL_ROOT_DIR "${OPENSSL_BASE}/${ANDROID_ABI}")
+    target_link_libraries(demo PRIVATE
+            ${SDL2_LIBRARY}
+            ${SSL_LIB}
+            ${CRYPTO_LIB})
+else()
+    find_package(OpenSSL REQUIRED)
+    target_link_libraries(demo PRIVATE
+            ${SDL2_LIBRARY}
+            OpenSSL::SSL
+            OpenSSL::Crypto)
 endif()
-find_package(OpenSSL REQUIRED)
-target_link_libraries(demo PRIVATE
-        ${SDL2_LIBRARY}
-        OpenSSL::SSL
-        OpenSSL::Crypto)
 
 target_include_directories(demo PRIVATE
         ${SDL2_INCLUDE_DIR}

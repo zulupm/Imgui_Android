@@ -38,8 +38,7 @@ android {
             cmake {
                 cFlags "-std=c11"
                 cppFlags "-std=c++11"
-                arguments "-DANDROID_PLATFORM=android-21",
-                        "-DOPENSSL_BASE=${System.getenv('OPENSSL_ROOT_DIR') ?: project.findProperty('openssl.dir')}"
+                arguments "-DANDROID_PLATFORM=android-21"
             }
         }
     }
