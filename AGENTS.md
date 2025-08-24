@@ -19,6 +19,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 - Export `ANDROID_SDK_ROOT` and `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` so build scripts and CI workflows can locate the toolchains consistently.
 - Use mbedTLS for secure WebSockets. The build fetches and links against mbedTLS; avoid adding OpenSSL or BoringSSL dependencies unless maintainers request otherwise.
 - Ensure mbedTLS headers are discoverable by the build system so native code can include the appropriate `mbedtls` headers.
+- The project uses a custom `mbedtls_config.h` that disables AES-NI for portability across Android ABIs; keep this file in sync with build scripts.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing
