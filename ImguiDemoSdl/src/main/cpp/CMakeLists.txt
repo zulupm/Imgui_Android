@@ -98,9 +98,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(mbedtls)
 
-target_compile_definitions(mbedtls PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
-target_compile_definitions(mbedcrypto PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
-target_compile_definitions(mbedx509 PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+# Replace the absolute MBEDTLS_CONFIG_FILE definition with a relative path for all
+# mbedTLS targets so the configuration header is found consistently across builds.
+foreach(mbed_target mbedtls mbedcrypto mbedx509)
+    get_target_property(defs ${mbed_target} COMPILE_DEFINITIONS)
+    if(defs)
+        list(FILTER defs EXCLUDE REGEX "^MBEDTLS_CONFIG_FILE=")
+        set_target_properties(${mbed_target} PROPERTIES COMPILE_DEFINITIONS "${defs}")
+    endif()
+    target_compile_definitions(${mbed_target} PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+endforeach()
 
 target_link_libraries(demo PRIVATE
         ${SDL2_LIBRARY}
