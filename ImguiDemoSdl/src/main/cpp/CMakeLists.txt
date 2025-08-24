@@ -90,19 +90,15 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
 if(ANDROID)
-    # Use the NDK's bundled BoringSSL headers and stub libraries
-    set(BORINGSSL_INCLUDE_DIR "$ENV{ANDROID_NDK}/sources/third_party/openssl/include")
+    # Use the NDK's bundled BoringSSL headers and link directly against the
+    # provided stub libraries. CMake's Android toolchain exposes these
+    # libraries via the sysroot so we can reference them by name.
+    set(BORINGSSL_INCLUDE_DIR "${ANDROID_NDK}/sources/third_party/openssl/include")
     target_include_directories(demo PRIVATE ${BORINGSSL_INCLUDE_DIR})
-    find_library(SSL_LIB ssl)
-    find_library(CRYPTO_LIB crypto)
-    if(SSL_LIB AND CRYPTO_LIB)
-        target_link_libraries(demo PRIVATE
-                ${SDL2_LIBRARY}
-                ${SSL_LIB}
-                ${CRYPTO_LIB})
-    else()
-        message(FATAL_ERROR "TLS libraries not found; secure WebSocket connections require NDK ssl and crypto stubs")
-    endif()
+    target_link_libraries(demo PRIVATE
+            ${SDL2_LIBRARY}
+            ssl
+            crypto)
 else()
     find_package(OpenSSL REQUIRED)
     target_link_libraries(demo PRIVATE
