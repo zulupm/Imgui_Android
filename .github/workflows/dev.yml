@@ -23,12 +23,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Restore OpenSSL cache
-        id: openssl-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/openssl
-          key: ${{ runner.os }}-openssl-1.1.1w
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -51,36 +45,6 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
 
-      - name: Build OpenSSL
-        if: steps.openssl-cache.outputs.cache-hit != 'true'
-        run: |
-          OPENSSL_VERSION=1.1.1w
-          curl -sL https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz | tar xz
-          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653
-          export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-          export PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
-          API=21
-          for ABI in armeabi-v7a arm64-v8a x86 x86_64; do
-            case $ABI in
-              armeabi-v7a) TARGET=android-arm;   HOST=armv7a-linux-androideabi ;;
-              arm64-v8a)   TARGET=android-arm64; HOST=aarch64-linux-android ;;
-              x86)         TARGET=android-x86;  HOST=i686-linux-android ;;
-              x86_64)      TARGET=android-x86_64; HOST=x86_64-linux-android ;;
-            esac
-            mkdir -p $HOME/openssl/$ABI
-            pushd openssl-$OPENSSL_VERSION
-            ./Configure $TARGET no-shared --prefix=$HOME/openssl/$ABI -D__ANDROID_API__=$API \
-              CC=${HOST}${API}-clang AR=llvm-ar RANLIB=llvm-ranlib NM=llvm-nm
-            make -j$(nproc)
-            make install_sw
-            make clean
-            popd
-          done
-      - name: Use cached OpenSSL
-        if: steps.openssl-cache.outputs.cache-hit == 'true'
-        run: echo "Using cached OpenSSL"
-      - name: Export OpenSSL root
-        run: echo "OPENSSL_ROOT=$HOME/openssl" >> $GITHUB_ENV
 
       - name: Build debug APK
         run: ./gradlew assembleDebug

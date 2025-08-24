@@ -22,13 +22,6 @@ if (shouldIncrement) {
     versionProps.store(new FileOutputStream(versionPropsFile), null)
 }
 
-def localProps = new Properties()
-def localPropsFile = rootProject.file("local.properties")
-if (localPropsFile.exists()) {
-    localProps.load(new FileInputStream(localPropsFile))
-}
-def opensslRoot = System.getenv("OPENSSL_ROOT") ?: localProps.getProperty("openssl.dir")
-
 android {
     namespace = "me.sfalexrog.imguidemo"
     compileSdkVersion 34
@@ -46,9 +39,7 @@ android {
                 cFlags "-std=c11"
                 cppFlags "-std=c++11"
                 arguments "-DANDROID_PLATFORM=android-21"
-                if (opensslRoot != null) {
-                    arguments "-DOPENSSL_ROOT=${opensslRoot}"
-                }
+                // Android's NDK provides BoringSSL; no external OpenSSL needed
             }
         }
     }
