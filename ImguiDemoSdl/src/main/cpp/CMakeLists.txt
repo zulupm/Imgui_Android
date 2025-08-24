@@ -91,12 +91,16 @@ target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
 # Fetch and link against mbedTLS for secure WebSockets
 include(FetchContent)
-set(MBEDTLS_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls_config.h")
+set(MBEDTLS_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/mbedtls_config.h" CACHE STRING "")
 FetchContent_Declare(
     mbedtls
     URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.5.1.tar.gz
 )
 FetchContent_MakeAvailable(mbedtls)
+
+target_compile_definitions(mbedtls PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+target_compile_definitions(mbedcrypto PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+target_compile_definitions(mbedx509 PUBLIC "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
 
 target_link_libraries(demo PRIVATE
         ${SDL2_LIBRARY}
