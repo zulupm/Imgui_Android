@@ -14,7 +14,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 - Install the Android SDK and NDK and set `sdk.dir` and `ndk.dir` in `local.properties`.
 - Use NDK version `25.2.9519653` for builds.
 - Export `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` so build scripts can locate the toolchain.
-- Android's NDK ships BoringSSL, so no external OpenSSL build is required for TLS support.
+- Build OpenSSL for each Android ABI and set `OPENSSL_ROOT_DIR` or `openssl.dir` so TLS headers and libraries are available during native builds.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing

@@ -33,7 +33,7 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), and Android-specific CMake. The NDK ships BoringSSL, so no additional TLS libraries are required for secure WebSocket support.
+You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), Android-specific CMake, and OpenSSL built for each Android ABI so the native code can establish secure WebSocket connections.
 
 Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 
@@ -43,14 +43,15 @@ and accept the licenses. If you don't have an NDK, run
 
     ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager "ndk;25.2.9519653"
 
-This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure `ANDROID_SDK_ROOT`, `ANDROID_NDK_HOME`, and `ANDROID_NDK_ROOT` environment variables all point to this NDK directory so Gradle can locate the toolchain. Create a `local.properties` file (or copy `local.properties.example`) with:
+This will download NDK r25c and place it in `${ANDROID_SDK_ROOT}/ndk/25.2.9519653`. Ensure `ANDROID_SDK_ROOT`, `ANDROID_NDK_HOME`, and `ANDROID_NDK_ROOT` environment variables all point to this NDK directory so Gradle can locate the toolchain. Also set `OPENSSL_ROOT_DIR` to a directory containing per-ABI OpenSSL builds. Create a `local.properties` file (or copy `local.properties.example`) with:
 
 ```
 sdk.dir=/absolute/path/to/android/sdk
 ndk.dir=/absolute/path/to/android/sdk/ndk/25.2.9519653
+openssl.dir=/absolute/path/to/openssl
 ```
 
-Gradle uses these paths to find your SDK and matching NDK installation.
+Gradle uses these paths to find your SDK, matching NDK installation, and OpenSSL headers/libraries.
 
 Then, download the project and its submodules:
 
