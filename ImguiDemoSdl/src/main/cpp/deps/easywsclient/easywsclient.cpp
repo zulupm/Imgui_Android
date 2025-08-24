@@ -74,8 +74,10 @@
 #include <string>
 
 #ifdef EASYWSCLIENT_ENABLE_SSL
-#include <openssl/ssl.h>
-#include <openssl/err.h>
+#include <mbedtls/net_sockets.h>
+#include <mbedtls/ssl.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
 #endif
 #include "easywsclient.hpp"
 
@@ -83,6 +85,29 @@ using easywsclient::Callback_Imp;
 using easywsclient::BytesCallback_Imp;
 
 namespace { // private module-only namespace
+
+#ifdef EASYWSCLIENT_ENABLE_SSL
+struct TLSContext {
+    mbedtls_ssl_context ssl;
+    mbedtls_ssl_config conf;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_entropy_context entropy;
+    mbedtls_net_context net;
+    TLSContext() {
+        mbedtls_ssl_init(&ssl);
+        mbedtls_ssl_config_init(&conf);
+        mbedtls_ctr_drbg_init(&ctr_drbg);
+        mbedtls_entropy_init(&entropy);
+        mbedtls_net_init(&net);
+    }
+    ~TLSContext() {
+        mbedtls_ssl_free(&ssl);
+        mbedtls_ssl_config_free(&conf);
+        mbedtls_ctr_drbg_free(&ctr_drbg);
+        mbedtls_entropy_free(&entropy);
+    }
+};
+#endif
 
 socket_t hostname_connect(const std::string& hostname, int port) {
     struct addrinfo hints;
@@ -179,13 +204,12 @@ class _RealWebSocket : public easywsclient::WebSocket
     bool useMask;
     bool isRxBad;
 #ifdef EASYWSCLIENT_ENABLE_SSL
-    SSL_CTX* ssl_ctx;
-    SSL* ssl;
+    TLSContext* tls;
 #endif
 
     _RealWebSocket(socket_t sockfd, bool useMask
 #ifdef EASYWSCLIENT_ENABLE_SSL
-            , SSL_CTX* ssl_ctx = NULL, SSL* ssl = NULL
+            , TLSContext* tls = NULL
 #endif
             )
             : sockfd(sockfd)
@@ -193,22 +217,17 @@ class _RealWebSocket : public easywsclient::WebSocket
             , useMask(useMask)
             , isRxBad(false)
 #ifdef EASYWSCLIENT_ENABLE_SSL
-            , ssl_ctx(ssl_ctx)
-            , ssl(ssl)
+            , tls(tls)
 #endif
             {
     }
 
     virtual ~_RealWebSocket() {
 #ifdef EASYWSCLIENT_ENABLE_SSL
-        if (ssl) {
-            SSL_shutdown(ssl);
-            SSL_free(ssl);
-            ssl = NULL;
-        }
-        if (ssl_ctx) {
-            SSL_CTX_free(ssl_ctx);
-            ssl_ctx = NULL;
+        if (tls) {
+            mbedtls_ssl_close_notify(&tls->ssl);
+            delete tls;
+            tls = NULL;
         }
 #endif
         closesocket(sockfd);
@@ -216,11 +235,10 @@ class _RealWebSocket : public easywsclient::WebSocket
 
     ssize_t _recv(char* buf, size_t len) {
 #ifdef EASYWSCLIENT_ENABLE_SSL
-        if (ssl) {
-            int ret = SSL_read(ssl, buf, (int)len);
+        if (tls) {
+            int ret = mbedtls_ssl_read(&tls->ssl, (unsigned char*)buf, len);
             if (ret <= 0) {
-                int err = SSL_get_error(ssl, ret);
-                if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+                if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
                     socketerrno = SOCKET_EWOULDBLOCK;
                 }
                 return -1;
@@ -233,11 +251,10 @@ class _RealWebSocket : public easywsclient::WebSocket
 
     ssize_t _send(const char* buf, size_t len) {
 #ifdef EASYWSCLIENT_ENABLE_SSL
-        if (ssl) {
-            int ret = SSL_write(ssl, buf, (int)len);
+        if (tls) {
+            int ret = mbedtls_ssl_write(&tls->ssl, (const unsigned char*)buf, len);
             if (ret <= 0) {
-                int err = SSL_get_error(ssl, ret);
-                if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+                if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
                     socketerrno = SOCKET_EWOULDBLOCK;
                 }
                 return -1;
@@ -285,7 +302,7 @@ class _RealWebSocket : public easywsclient::WebSocket
                 rxbuf.resize(N);
                 closesocket(sockfd);
 #ifdef EASYWSCLIENT_ENABLE_SSL
-                if (ssl) { SSL_shutdown(ssl); SSL_free(ssl); SSL_CTX_free(ssl_ctx); ssl = NULL; ssl_ctx = NULL; }
+                if (tls) { mbedtls_ssl_close_notify(&tls->ssl); delete tls; tls = NULL; }
 #endif
                 readyState = CLOSED;
                 fputs(ret < 0 ? "Connection error!\n" : "Connection closed!\n", stderr);
@@ -304,7 +321,7 @@ class _RealWebSocket : public easywsclient::WebSocket
             else if (ret <= 0) {
                 closesocket(sockfd);
 #ifdef EASYWSCLIENT_ENABLE_SSL
-                if (ssl) { SSL_shutdown(ssl); SSL_free(ssl); SSL_CTX_free(ssl_ctx); ssl = NULL; ssl_ctx = NULL; }
+                if (tls) { mbedtls_ssl_close_notify(&tls->ssl); delete tls; tls = NULL; }
 #endif
                 readyState = CLOSED;
                 fputs(ret < 0 ? "Connection error!\n" : "Connection closed!\n", stderr);
@@ -317,7 +334,7 @@ class _RealWebSocket : public easywsclient::WebSocket
         if (!txbuf.size() && readyState == CLOSING) {
             closesocket(sockfd);
 #ifdef EASYWSCLIENT_ENABLE_SSL
-            if (ssl) { SSL_shutdown(ssl); SSL_free(ssl); SSL_CTX_free(ssl_ctx); ssl = NULL; ssl_ctx = NULL; }
+            if (tls) { mbedtls_ssl_close_notify(&tls->ssl); delete tls; tls = NULL; }
 #endif
             readyState = CLOSED;
         }
@@ -583,18 +600,35 @@ easywsclient::WebSocket::pointer from_url(const std::string& url, bool useMask, 
     }
 
 #ifdef EASYWSCLIENT_ENABLE_SSL
-    SSL_CTX* ctx = NULL;
-    SSL* ssl = NULL;
+    TLSContext* tls = NULL;
     if (useSSL) {
-        SSL_library_init();
-        SSL_load_error_strings();
-        ctx = SSL_CTX_new(TLS_client_method());
-        if (!ctx) { closesocket(sockfd); return NULL; }
-        ssl = SSL_new(ctx);
-        if (!ssl) { SSL_CTX_free(ctx); closesocket(sockfd); return NULL; }
-        SSL_set_tlsext_host_name(ssl, host);
-        SSL_set_fd(ssl, sockfd);
-        if (SSL_connect(ssl) != 1) { SSL_free(ssl); SSL_CTX_free(ctx); closesocket(sockfd); return NULL; }
+        tls = new TLSContext;
+        const char* pers = "easywsclient";
+        if (mbedtls_ctr_drbg_seed(&tls->ctr_drbg, mbedtls_entropy_func, &tls->entropy,
+                                  (const unsigned char*)pers, strlen(pers)) != 0) {
+            delete tls; closesocket(sockfd); return NULL;
+        }
+        if (mbedtls_ssl_config_defaults(&tls->conf,
+                MBEDTLS_SSL_IS_CLIENT,
+                MBEDTLS_SSL_TRANSPORT_STREAM,
+                MBEDTLS_SSL_PRESET_DEFAULT) != 0) {
+            delete tls; closesocket(sockfd); return NULL;
+        }
+        mbedtls_ssl_conf_authmode(&tls->conf, MBEDTLS_SSL_VERIFY_NONE);
+        mbedtls_ssl_conf_rng(&tls->conf, mbedtls_ctr_drbg_random, &tls->ctr_drbg);
+        if (mbedtls_ssl_setup(&tls->ssl, &tls->conf) != 0) {
+            delete tls; closesocket(sockfd); return NULL;
+        }
+        mbedtls_ssl_set_hostname(&tls->ssl, host);
+        tls->net.fd = sockfd;
+        mbedtls_ssl_set_bio(&tls->ssl, &tls->net, mbedtls_net_send, mbedtls_net_recv, NULL);
+        while (true) {
+            int ret = mbedtls_ssl_handshake(&tls->ssl);
+            if (ret == 0) break;
+            if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+                delete tls; closesocket(sockfd); return NULL;
+            }
+        }
     }
 #else
     if (useSSL) {
@@ -611,13 +645,13 @@ easywsclient::WebSocket::pointer from_url(const std::string& url, bool useMask, 
         int i;
         auto ws_send = [&](const char* data, size_t len){
 #ifdef EASYWSCLIENT_ENABLE_SSL
-            if (useSSL) return SSL_write(ssl, data, (int)len);
+            if (useSSL) return mbedtls_ssl_write(&tls->ssl, (const unsigned char*)data, len);
 #endif
             return (int)::send(sockfd, data, len, 0);
         };
         auto ws_recv = [&](char* data){
 #ifdef EASYWSCLIENT_ENABLE_SSL
-            if (useSSL) return SSL_read(ssl, data, 1);
+            if (useSSL) return mbedtls_ssl_read(&tls->ssl, (unsigned char*)data, 1);
 #endif
             return (int)recv(sockfd, data, 1, 0);
         };
@@ -656,7 +690,7 @@ easywsclient::WebSocket::pointer from_url(const std::string& url, bool useMask, 
 #endif
     //fprintf(stderr, "Connected to: %s\n", url.c_str());
 #ifdef EASYWSCLIENT_ENABLE_SSL
-    return easywsclient::WebSocket::pointer(new _RealWebSocket(sockfd, useMask, useSSL ? ctx : NULL, useSSL ? ssl : NULL));
+    return easywsclient::WebSocket::pointer(new _RealWebSocket(sockfd, useMask, useSSL ? tls : NULL));
 #else
     return easywsclient::WebSocket::pointer(new _RealWebSocket(sockfd, useMask));
 #endif

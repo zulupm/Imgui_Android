@@ -9,7 +9,7 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 - Use `rg` for searching the codebase and avoid `ls -R` or `grep -R`.
 - Follow the existing code style for Kotlin, C++, and build scripts.
 - Keep commits focused and easy to review with clear, imperative messages (e.g., `Add feature X`).
-- Once a technical direction is chosen (e.g., using the NDK's BoringSSL for TLS), do not switch to alternative stacks unless explicitly requested by maintainers.
+- Once a technical direction is chosen (e.g., using mbedTLS for TLS), do not switch to alternative stacks unless explicitly requested by maintainers.
 - Investigate and resolve build or CI failures immediately rather than committing temporary workarounds.
 
 ## Environment
@@ -17,8 +17,8 @@ These instructions apply to the entire repository unless a more specific `AGENTS
 - Use NDK version `25.2.9519653` for builds.
 - Ensure the NDK path in `local.properties` matches `android.ndkVersion` to avoid version conflicts.
 - Export `ANDROID_SDK_ROOT` and `ANDROID_NDK_HOME`/`ANDROID_NDK_ROOT` so build scripts and CI workflows can locate the toolchains consistently.
-- Link against the NDK's bundled TLS libraries (BoringSSL); if TLS libraries are reported missing, fix the environment instead of disabling secure WebSockets.
-- Include BoringSSL headers from `${ANDROID_NDK}/sources/third_party/openssl/include` so native code can find `openssl/ssl.h`.
+- Use mbedTLS for secure WebSockets. The build fetches and links against mbedTLS; avoid adding OpenSSL or BoringSSL dependencies unless maintainers request otherwise.
+- Ensure mbedTLS headers are discoverable by the build system so native code can include the appropriate `mbedtls` headers.
 - The demo relies on `network_security_config.xml` and Internet permissions for secure WebSocket connections; keep these enabled.
 
 ## Testing

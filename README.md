@@ -33,7 +33,7 @@ tell me why if it isn't!), but it seems to work.
 
 ### Android
 
-You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), and Android-specific CMake. The native code links against the NDK's bundled TLS libraries (BoringSSL) for secure WebSocket connections, so no extra TLS packages are required.
+You'll need OpenJDK 1.8, the Android SDK, the NDK (r25c), and Android-specific CMake. The native code fetches and links against mbedTLS for secure WebSocket connections, so no extra TLS packages are required.
 
 Gradle will install everything else for you if you accept the licenses. In order to accept the licenses, run
 

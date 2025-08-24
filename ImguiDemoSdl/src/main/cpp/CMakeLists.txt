@@ -3,7 +3,7 @@
 # be the same throughout platforms.
 
 # target_link_options appeared in 3.13, and is extremely recommended for Android builds
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 
 project(imgui_demo)
 
@@ -89,23 +89,19 @@ set(DEMO_SOURCES ${IMGUI_FILES} ${DEMO_FILES} ${GLLOAD_FILES})
 
 target_compile_definitions(demo PRIVATE EASYWSCLIENT_ENABLE_SSL)
 
-if(ANDROID)
-    # Use the NDK's bundled BoringSSL headers and link directly against the
-    # provided stub libraries. CMake's Android toolchain exposes these
-    # libraries via the sysroot so we can reference them by name.
-    set(BORINGSSL_INCLUDE_DIR "${ANDROID_NDK}/sources/third_party/openssl/include")
-    target_include_directories(demo PRIVATE ${BORINGSSL_INCLUDE_DIR})
-    target_link_libraries(demo PRIVATE
-            ${SDL2_LIBRARY}
-            ssl
-            crypto)
-else()
-    find_package(OpenSSL REQUIRED)
-    target_link_libraries(demo PRIVATE
-            ${SDL2_LIBRARY}
-            OpenSSL::SSL
-            OpenSSL::Crypto)
-endif()
+# Fetch and link against mbedTLS for secure WebSockets
+include(FetchContent)
+FetchContent_Declare(
+    mbedtls
+    URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.5.1.tar.gz
+)
+FetchContent_MakeAvailable(mbedtls)
+
+target_link_libraries(demo PRIVATE
+        ${SDL2_LIBRARY}
+        mbedtls
+        mbedcrypto
+        mbedx509)
 
 target_include_directories(demo PRIVATE
         ${SDL2_INCLUDE_DIR}
