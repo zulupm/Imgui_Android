@@ -98,18 +98,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(mbedtls)
 
-# Replace upstream macro definition with project config and avoid duplicates
+# Make the custom configuration discoverable to mbedTLS consumers
 foreach(mbed_target mbedcrypto mbedx509 mbedtls)
-    # Remove the absolute-path definition added by the mbedTLS build scripts
-    get_target_property(_defs ${mbed_target} COMPILE_DEFINITIONS)
-    if(_defs)
-        list(FILTER _defs EXCLUDE REGEX "^MBEDTLS_CONFIG_FILE=")
-        set_target_properties(${mbed_target} PROPERTIES COMPILE_DEFINITIONS "${_defs}")
-    endif()
-
-    target_include_directories(${mbed_target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-    target_compile_definitions(${mbed_target} PRIVATE
-            "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
+    target_include_directories(${mbed_target} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 endforeach()
 
 # Propagate the configuration to targets linking against mbedTLS
