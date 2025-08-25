@@ -98,19 +98,32 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(mbedtls)
 
-# Make the custom configuration header discoverable and propagate macro
-# Expose custom configuration to dependents without redefining macro for mbedTLS itself
-foreach(mbed_target mbedtls mbedcrypto mbedx509)
-    target_include_directories(${mbed_target} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-    target_compile_definitions(${mbed_target} INTERFACE
+# Replace upstream macro definition with project config and avoid duplicates
+foreach(mbed_target mbedcrypto mbedx509 mbedtls)
+    # Remove the absolute-path definition added by the mbedTLS build scripts
+    get_target_property(_defs ${mbed_target} COMPILE_DEFINITIONS)
+    if(_defs)
+        list(FILTER _defs EXCLUDE REGEX "^MBEDTLS_CONFIG_FILE=")
+        set_target_properties(${mbed_target} PROPERTIES COMPILE_DEFINITIONS "${_defs}")
+    endif()
+
+    target_include_directories(${mbed_target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_compile_definitions(${mbed_target} PRIVATE
             "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
 endforeach()
+
+# Propagate the configuration to targets linking against mbedTLS
+add_library(mbedtls_config INTERFACE)
+target_include_directories(mbedtls_config INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(mbedtls_config INTERFACE
+        "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
 
 target_link_libraries(demo PRIVATE
         ${SDL2_LIBRARY}
         mbedtls
         mbedcrypto
-        mbedx509)
+        mbedx509
+        mbedtls_config)
 
 target_include_directories(demo PRIVATE
         ${SDL2_INCLUDE_DIR}
