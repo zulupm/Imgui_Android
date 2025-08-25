@@ -99,9 +99,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(mbedtls)
 
 # Make the custom configuration header discoverable and propagate macro
+# Expose custom configuration to dependents without redefining macro for mbedTLS itself
 foreach(mbed_target mbedtls mbedcrypto mbedx509)
-    target_include_directories(${mbed_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_compile_definitions(${mbed_target} PUBLIC
+    target_include_directories(${mbed_target} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_compile_definitions(${mbed_target} INTERFACE
             "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
 endforeach()
 
